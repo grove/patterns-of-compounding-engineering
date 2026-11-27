@@ -118,6 +118,7 @@ class SiteBuildTests(unittest.TestCase):
             "guide.md",
             "# Using the guide\n\n*Start with a problem.*\n\n"
             "## Use the task already open\n\nTry one small improvement.\n\n"
+            "## Give the method to the next investigator\n\nTry a skill.\n\n"
             "## Choose a problem\n\n[Replay](./patterns/persistent-reproducer.md)\n",
         )
         self.write(
@@ -174,6 +175,8 @@ class SiteBuildTests(unittest.TestCase):
         pages = site_build.build()
         article = self.output / "patterns/persistent-reproducer.html"
         self.assertIn(article, pages)
+        homepage = HTMLFacts((self.output / "index.html").read_text(encoding="utf-8"))
+        self.assertIn("guide.html#give-the-method-to-the-next-investigator", homepage.links)
         result = HTMLFacts(article.read_text(encoding="utf-8"))
         self.assertIn("investment-retrospective.html#maintenance", result.links)
         self.assertIn("../guide.html#choose-a-problem", result.links)

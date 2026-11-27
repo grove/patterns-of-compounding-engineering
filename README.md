@@ -10,7 +10,7 @@ The collection follows [Software that improves with age](https://grove.github.io
 
 Have a task open already? Start with [a small loop for everyday work](./guide.md#use-the-task-already-open), then [walk a duplicate-payment fix through it](./guide.md#walk-one-fix-through-the-loop). For a particular recurring problem, choose a pattern below.
 
-Working toward a larger change? See how the patterns can help you [replace a difficult subsystem](./guide.md#make-a-difficult-subsystem-replaceable), [reduce recurring review work](./guide.md#reduce-recurring-review-work), or [delegate one kind of task](./guide.md#delegate-one-kind-of-task). Each route explains when to stop adding machinery. To choose an investment, try [the tenfold exercise](./guide.md#use-the-tenfold-ambition-to-choose-the-next-investment) against a recent change.
+Working toward a larger change? See how the patterns can help you [replace a difficult subsystem](./guide.md#make-a-difficult-subsystem-replaceable), [reduce recurring review work](./guide.md#reduce-recurring-review-work), or [delegate one kind of task](./guide.md#delegate-one-kind-of-task). Each route explains when to stop adding machinery. To choose an investment, try [the tenfold exercise](./guide.md#use-the-tenfold-ambition-to-choose-the-next-investment): use the Theory of Constraints to identify what limits a worthwhile outcome before deciding which pattern deserves the effort.
 
 ## Understand failures and check behavior
 

@@ -144,33 +144,48 @@ These patterns do not always point in the same direction. Some stack cleanly; ot
 
 ## Use the tenfold ambition to choose the next investment
 
-Our distant aim is to become [ten times as effective with AI](https://grove.github.io/engineering-that-compounds/essays/what-would-ten-times-look-like.html), within sustainable working hours and with at least the same standards of care. That gives us a reason to question expensive habits we have learned to work around.
+Our distant aim is to become [ten times as effective with AI](https://grove.github.io/engineering-that-compounds/essays/what-would-ten-times-look-like.html), within sustainable working hours and with at least the same standards of care. Use that ambition to question where worthwhile work gets stuck, rather than to set a target for producing more patches.
 
-Bring a recent feature, repair or operational change to a team discussion. Follow it from the original need through release and follow-up work. If AI could prepare its implementation almost immediately, what would still hold it up?
+Bring a recent feature, repair or operational change to a team discussion. Name the result that matters and the part of the value stream responsible for it. Follow the work from need through acceptance, release and follow-up. If AI could prepare its implementation almost immediately, what would still hold it up?
 
-1. **Name the useful result.** Choose something the team needs to accomplish: let a customer change plans without an incorrect charge, or restore a service after a failed release. Agree how you would know the result was good enough.
-2. **Find where the work got stuck.** Use the pull request, incident notes and people's recollections. Separate time spent working from elapsed time waiting. Was the difficulty an unsettled rule, awkward setup, unclear test output, or a decision only one person could make? Label guesses that need checking.
-3. **Choose one small attempt.** Resolve one rule, retain one reviewed case, or remove an unnecessary handoff. Name the result you expect on the next comparable change, give the attempt a budget, and say what would make you stop. A missing decision may need its owner before any tool is useful.
-4. **Follow the whole cost.** Record setup, supervision, review, rework and upkeep, including work passed to another team. Record model and runtime costs separately. Include failed and bypassed attempts when you look back. Check the agreed outcome; a faster attempt that leaves a customer problem unresolved has not finished the job.
-5. **Look again after use.** Pick a review point, such as the next few eligible changes and a fallback date. Did the obstacle shrink? What holds up the work now? If an earlier check made the next capability easier to build, record what transferred and what needed adapting.
+Adapt the [Theory of Constraints' five focusing steps](https://www.goldrattresearchlabs.com/introduction-to-toc/) to that work:
 
-Suppose, in a hypothetical team, webhook changes wait for the original author to reconstruct a duplicate delivery. Keeping one synthetic event sequence and its reviewed expectation could let another engineer investigate. The next attempt might expose a crash between recording the event and applying the payment. The retained case gives that investigation a starting point; it does not answer the new durability question. That missing evidence is a better reason for the next investment than the number of changes an agent can propose.
+1. **Identify.** Use recent changes, blocked work, queues and conversations to locate what actually limits the desired result. Separate active effort from waiting. An unsettled cancellation rule can hold up a dozen changes; a slow linter might not. Write down why you think this is the constraint, and what would change your mind.
+2. **Exploit.** Try a change that needs little or no new machinery. Prepare one reviewed set of questions for the scarce billing expert, fix a needless repair procedure, or get the missing decision before implementation. Do not save time by weakening verification or asking people to work longer hours.
+3. **Subordinate.** Align the rest of the work with that decision. Start fewer patches while acceptance is blocked; have available engineers or agents prepare evidence, resolve dependencies or help finish the oldest valuable work. Keep capacity for incidents, learning and uncertain work rather than trying to keep everyone busy.
+4. **Elevate.** If the constraint persists, choose a small investment that changes it: a reusable scenario, a clarified ownership boundary, a trained colleague, a narrower interface or a deleted handoff. Name the expected effect, an investment budget, an upkeep cap and a stopping condition. Use the patterns below for this choice, not as a checklist of assets to accumulate.
+5. **Repeat.** At the next few comparable changes or a fallback date, check the end-to-end outcome as well as local effort. Did the original obstacle shrink? Did work just wait somewhere else? Has quality or risk changed, and who now carries the upkeep? Keep, shrink or stop the investment, decide how to use any recovered capacity, and identify the next constraint.
 
-Keep the decision in the existing issue. Use an [investment retrospective](./patterns/investment-retrospective.md) to revisit it. The tenfold ambition should help choose the work; claims about improvement need the evidence from doing it.
+Suppose, in a hypothetical team, webhook changes wait for the original author to reconstruct a duplicate delivery. First give that author a clear question and one prepared account. If reconstructing the state still consumes their scarce attention, retain one synthetic event sequence and its reviewed expectation and let another engineer try it. The next attempt might expose a crash between recording the event and applying the payment. The retained case gives that investigation a starting point; it does not answer the new durability question. Test whether preparing that new check is easier and whether it helps finish changes.
+
+For a meaningful investment, leave a short note in the existing issue rather than a separate reporting system:
+
+```text
+Desired outcome and scope:
+Suspected constraint; evidence and competing explanation:
+Smallest attempt; how other work should adapt:
+Expected end-to-end effect and quality safeguards:
+Budget, upkeep cap, review trigger and stopping condition:
+After use: result, costs, new constraint, next allocation:
+```
+
+Use an [investment retrospective](./patterns/investment-retrospective.md) to revisit it. Do not require this note for every small fix. Constraints can be transient, external or closely coupled; not every recurring irritation is the limit, and not every valuable investment must improve current throughput. Required security, safety and reliability work may protect outcomes instead.
 
 ## Choosing between competing investments
 
 Teams rarely run out of ideas for internal tooling; they run out of time. Say you have two days and four real candidates: cleaner billing fixtures, better webhook telemetry, a custom lint rule, or deleting a legacy CSV export.
 
-Skip weighted scoring spreadsheets and ask five plain questions:
+Begin with the constraint hypothesis, not a weighted scoring spreadsheet. If billing decisions wait for someone to explain a discrepancy, faster linting is unlikely to help finish those changes. If support cannot diagnose failures without a developer, useful telemetry might make more of a difference than faster fixtures. If a risky migration is about to make the old export a liability, evidence for safe deletion might be the best use of the two days.
 
-- **What does it unlock?** Does this make a risky upcoming change (like a rewrite or deletion) practical? A comparator you only run for one quarter can beat a daily convenience script if it unblocks replacing a tangled module.
-- **How often does the pain hit?** Frequent friction usually wins, unless you are about to polish a workaround for a bug you should just fix.
-- **Who benefits?** Does this speed up one person's terminal workflow, or does it unblock newcomers, code reviewers, on-call, and CI?
-- **How fast will it go stale?** Assumptions expire. A fixture suite welded to a billing model you plan to retire next quarter has a short shelf life.
-- **What is the carrying cost?** What breaks when schemas, dependencies, or product rules shift? A built-in ESLint rule costs almost nothing to own compared to a bespoke test harness.
+Ask five questions:
 
-Teams usually misjudge the first and last ones: they over-invest in frequent minor annoyances and under-invest in the one capability that makes an upcoming structural change safe, while forgetting that every helper has to be fed every time the domain moves.
+- **What outcome is limited, and how would this change it?** Name the connection to the constraint, a necessary guarantee or a credible upcoming obstacle. A local saving is useful if its capacity can be spent well; do not call it a throughput gain by default.
+- **Can we use existing capacity better first?** Try settling the decision, eliminating the chore or redirecting available effort before building a durable tool.
+- **What does it unlock?** A comparator you only run for one quarter can beat a daily convenience script if it unblocks a risky replacement. Reusing an existing capability may also make the attempt cheaper.
+- **How often will it help, who benefits, and for how long?** Test assumptions about reuse, demand and which team will receive the benefit. A frequently annoying task need not be the constraint.
+- **What does it displace and cost to carry?** Count the work deferred, maintenance, extra review and any work shifted elsewhere. Prefer a small reversible attempt when uncertain.
+
+If several candidates help the same constraint, choose the smallest credible experiment. If there is no evidence that any of them helps the chosen outcome, investigate before investing. If an investment addresses an important risk rather than current capacity, say so and use evidence appropriate to that risk. Revisit the choice when the constraint moves.
 
 ## Keep the first version small
 

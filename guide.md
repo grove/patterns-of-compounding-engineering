@@ -142,6 +142,22 @@ These patterns do not always point in the same direction. Some stack cleanly; ot
 | [Capability command](./patterns/capability-command.md) / [Guardrails](./patterns/review-comment-to-guardrail.md) vs. human understanding | Making checks effortless can hide how the system works unless failure output and walkthroughs keep the mental model visible |
 | [Verified retrieval](./patterns/verified-retrieval.md) + [Capability command](./patterns/capability-command.md) | Finding the right check and running it correctly are separate jobs; rehearse both |
 
+## Use the tenfold ambition to choose the next investment
+
+Our distant aim is to become [ten times as effective with AI](https://grove.github.io/engineering-that-compounds/essays/what-would-ten-times-look-like.html), within sustainable working hours and with at least the same standards of care. That gives us a reason to question expensive habits we have learned to work around.
+
+Bring a recent feature, repair or operational change to a team discussion. Follow it from the original need through release and follow-up work. If AI could prepare its implementation almost immediately, what would still hold it up?
+
+1. **Name the useful result.** Choose something the team needs to accomplish: let a customer change plans without an incorrect charge, or restore a service after a failed release. Agree how you would know the result was good enough.
+2. **Find where the work got stuck.** Use the pull request, incident notes and people's recollections. Separate time spent working from elapsed time waiting. Was the difficulty an unsettled rule, awkward setup, unclear test output, or a decision only one person could make? Label guesses that need checking.
+3. **Choose one small attempt.** Resolve one rule, retain one reviewed case, or remove an unnecessary handoff. Name the result you expect on the next comparable change, give the attempt a budget, and say what would make you stop. A missing decision may need its owner before any tool is useful.
+4. **Follow the whole cost.** Record setup, supervision, review, rework and upkeep, including work passed to another team. Record model and runtime costs separately. Include failed and bypassed attempts when you look back. Check the agreed outcome; a faster attempt that leaves a customer problem unresolved has not finished the job.
+5. **Look again after use.** Pick a review point, such as the next few eligible changes and a fallback date. Did the obstacle shrink? What holds up the work now? If an earlier check made the next capability easier to build, record what transferred and what needed adapting.
+
+Suppose, in a hypothetical team, webhook changes wait for the original author to reconstruct a duplicate delivery. Keeping one synthetic event sequence and its reviewed expectation could let another engineer investigate. The next attempt might expose a crash between recording the event and applying the payment. The retained case gives that investigation a starting point; it does not answer the new durability question. That missing evidence is a better reason for the next investment than the number of changes an agent can propose.
+
+Keep the decision in the existing issue. Use an [investment retrospective](./patterns/investment-retrospective.md) to revisit it. The tenfold ambition should help choose the work; claims about improvement need the evidence from doing it.
+
 ## Choosing between competing investments
 
 Teams rarely run out of ideas for internal tooling; they run out of time. Say you have two days and four real candidates: cleaner billing fixtures, better webhook telemetry, a custom lint rule, or deleting a legacy CSV export.

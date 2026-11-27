@@ -193,3 +193,77 @@ th { background: var(--surface); font: 600 .875rem/1.5 var(--sans); }
   a { text-decoration: underline; }
 }
 
+/* Shared navigation for the Compounding Engineering collections. */
+.collection-bar {
+  --family-bg: #f6f7f3;
+  --family-ink: #18382d;
+  --family-accent: #1e6047;
+  --family-rule: #ccd8cf;
+  background: var(--family-bg);
+  color: var(--family-ink);
+  border-bottom: 1px solid var(--family-rule);
+}
+.collection-nav {
+  width: min(1120px, calc(100% - 4rem));
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem 2rem;
+  padding-block: .5rem;
+  font: .875rem/1.4 var(--sans);
+}
+.collection-home {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  min-height: 44px;
+  color: var(--family-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.collection-home svg { flex: none; color: var(--family-accent); }
+.collection-nav ul {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 1.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.collection-nav li { margin: 0; }
+.collection-nav li a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--family-ink);
+  text-decoration: none;
+}
+.collection-nav a:hover,
+.collection-nav a[aria-current="true"] {
+  color: var(--family-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: .3em;
+}
+.collection-nav a:focus-visible {
+  outline: 2px solid var(--family-accent);
+  outline-offset: 4px;
+}
+@media (max-width: 720px) {
+  .collection-nav {
+    width: calc(100% - 2.5rem);
+    flex-wrap: wrap;
+    gap: 0 1.5rem;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .collection-bar {
+    --family-bg: #14221a;
+    --family-ink: #e6eee6;
+    --family-accent: #a7d8ba;
+    --family-rule: #365143;
+  }
+}
+@media print { .collection-bar { display: none; } }

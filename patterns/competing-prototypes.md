@@ -52,6 +52,14 @@ Then try making the *next* change in both prototypes and see where the friction 
 
 Watch out for two biases that skew short spikes. First, people polish the option they already prefer, and whoever knows the existing codebase moves faster in it; note uneven familiarity honestly instead of mistaking it for long-term cost. Second, short timeboxes flatter designs with low upfront setup over designs with better long-term economics. A quick hack almost always wins a one-day race against a cleaner model unless you test a realistic follow-up change, like adding a second overlapping rule or debugging an unexpected output.
 
+## Run investigations separately, decide together
+
+If the alternatives really are independent, give each investigator the same brief, reviewed cases and timebox, and a separate checkout and test state. Keep the evidence and failures visible until the comparison. Ask each to return its assumptions, results, costs and unresolved questions rather than competing to be the first with a green test.
+
+It is often easier to parallelize research than implementation. Two people can independently investigate a design without merging conflicting patches. Where their findings disagree, settle the shared contract before committing either design. Agreement between agents that share a prompt or mistaken requirement is not independent evidence.
+
+When integrating changes, rerun the cross-boundary checks on the combined result. Count coordination and review time as part of the experiment; more concurrent attempts are not automatically more accepted work.
+
 ## Keep "do less" on the table
 
 Sometimes the comparison points to a smaller move than either camp expected. Maybe the rule table handles the new discount cleanly and immediately needs precedence rules and conflict checks, while plain functions stay local, readable, and easy for support to trace.

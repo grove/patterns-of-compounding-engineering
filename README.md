@@ -4,7 +4,7 @@
 
 A team fixes a duplicate payment, replaces a calculation, or removes an old export. Some of that work can make the next change easier: a reproducible failure, a trusted comparison, a way to find the remaining consumers. Keeping those things has a cost. This guide is about choosing what is worth keeping and making it usable by someone else.
 
-The collection follows [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/). It puts their arguments to work through twelve patterns, with examples, adoption steps, limits and sources.
+The collection follows [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/). It puts their arguments to work through fourteen patterns, with examples, adoption steps, limits and sources.
 
 **Website address:** [grove.github.io/patterns-of-compounding-engineering](https://grove.github.io/patterns-of-compounding-engineering/)
 
@@ -25,11 +25,18 @@ Have a task open already? Start with [a small loop for everyday work](./guide.md
 8. **[Capability command](./patterns/capability-command.md)** — Package an investigation so someone else can run it safely.
 9. **[Verified retrieval](./patterns/verified-retrieval.md)** — Check whether a fresh attempt finds the relevant knowledge and uses it within its limits.
 
+10. **[Investigation to skill](./patterns/investigation-to-skill.md)** — Keep a useful investigative method and try it on a different problem.
+11. **[Earned delegation](./patterns/earned-delegation.md)** — Turn repeated supervision into evidence about what the environment needs next.
+
 ## Choose what deserves the effort
 
-10. **[Competing prototypes](./patterns/competing-prototypes.md)** — Answer a design question with a few small implementations.
-11. **[Subtraction investigation](./patterns/subtraction-investigation.md)** — Gather the evidence needed to remove a piece of software.
-12. **[Investment retrospective](./patterns/investment-retrospective.md)** — Find out whether a retained tool helped subsequent work.
+12. **[Competing prototypes](./patterns/competing-prototypes.md)** — Answer a design question with a few small implementations.
+13. **[Subtraction investigation](./patterns/subtraction-investigation.md)** — Gather the evidence needed to remove a piece of software.
+14. **[Investment retrospective](./patterns/investment-retrospective.md)** — Find out whether a retained tool helped subsequent work.
+
+## Apply a skill
+
+The [experimental skill collection](./skills/README.md) contains three small procedures you can read yourself or give to a compatible coding agent. Try the compounding pass after a change, use subtraction investigation before a proposed removal, or review a technical example. Start with one real task and check the outcome.
 
 ## Run the example
 

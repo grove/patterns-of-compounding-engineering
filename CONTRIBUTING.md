@@ -43,6 +43,8 @@ A useful pattern includes the upkeep it creates. Claims about AI saving time or 
 
 Keep runnable examples honest. A command presented as part of this repository must work from the documented directory. Label adaptation sketches and pseudocode. Tests should exercise both the deliberately broken behavior and the corrected behavior.
 
+For substantial changes, use the [technical review skill](./skills/technical-review/SKILL.md) to check what the example demonstrates and what it leaves open. The [compounding pass](./skills/compounding-pass/SKILL.md) can suggest a worthwhile follow-up after work is complete. Both are optional, and neither grants authority to make changes. Keep the [skill collection](./skills/README.md) small; exercise an existing method before adding another one.
+
 ## GitHub Pages
 
 In [Settings → Pages](https://github.com/grove/patterns-of-compounding-engineering/settings/pages), set **Build and deployment → Source** to **GitHub Actions**. This repository setting is separate from the files in a pull request.

@@ -6,6 +6,7 @@ The build smoke test uses an isolated miniature collection, not the live _site.
 from __future__ import annotations
 
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -90,6 +91,15 @@ class MarkdownTests(unittest.TestCase):
         self.assertEqual(len(set(result.ids)), 4)
         navigation = HTMLFacts(site_build.contents_nav(markup))
         self.assertEqual({link[1:] for link in navigation.links}, set(result.ids))
+
+
+class CatalogueConsistencyTests(unittest.TestCase):
+    def test_readme_lists_all_catalogue_patterns_in_order(self):
+        entries = json.loads((REPOSITORY / "site/catalog.json").read_text(encoding="utf-8"))
+        readme = (REPOSITORY / "README.md").read_text(encoding="utf-8")
+        listed = re.findall(r"^\d+\. \*\*\[([^\]]+)\]\(\./patterns/([^/)]+)\.md\)\*\*", readme, re.MULTILINE)
+        self.assertEqual(listed, [(entry["title"], entry["slug"]) for entry in entries],
+                         "Update the README list when editing the catalogue.")
 
 
 class SiteBuildTests(unittest.TestCase):

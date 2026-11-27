@@ -72,6 +72,22 @@
     "keywords": "knowledge memory documentation retrieval agent context instructions learning handoff"
   },
   {
+    "slug": "investigation-to-skill",
+    "title": "Investigation to skill",
+    "group": "change",
+    "problem": "We keep teaching people and agents the same investigation.",
+    "summary": "Retain a successful method, then try it on a different task with a different answer.",
+    "keywords": "skill agent procedure method investigation workflow learning"
+  },
+  {
+    "slug": "earned-delegation",
+    "title": "Earned delegation",
+    "group": "change",
+    "problem": "We have to step in at the same point every time.",
+    "summary": "Find and repair the missing evidence or safeguard before widening a task's delegation boundary.",
+    "keywords": "delegation supervision agent autonomy permissions safety evidence review"
+  },
+  {
     "slug": "competing-prototypes",
     "title": "Competing prototypes",
     "group": "invest",
@@ -96,4 +112,3 @@
     "keywords": "roi measurement friction economics time upkeep learning"
   }
 ]
-

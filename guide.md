@@ -54,6 +54,14 @@ The PR note can stay short: *Kept the duplicate-delivery case and its expectatio
 
 If the next task is replacing the invoice calculator, the lab also offers `python3 examples/billing_lab.py verify` and `python3 examples/billing_lab.py compare`. Its [instructions](./examples/README.md) explain the deliberately broken candidate and the calculation rules. Pick the check that answers the task's question.
 
+## Give the method to the next investigator
+
+A useful result and a useful way of getting to it are different things. Keep the decision about one export near the export. Keep a method for finding hidden consumers somewhere the next removal investigation can discover it. [Investigation to skill](./patterns/investigation-to-skill.md) explains how to try that method on a different task, including a case where deletion is the wrong answer.
+
+The collection has three small [experimental skills](./skills/README.md), readable by people and compatible agents. Try the [compounding pass](./skills/compounding-pass/SKILL.md) with the diff and review findings from a completed task. It proposes a small investment or no change. Try the [subtraction investigation](./skills/subtraction-investigation/SKILL.md) with one removal candidate, or [technical review](./skills/technical-review/SKILL.md) with a changed example. You can give an agent the file directly; no plugin is required.
+
+If you keep having to interrupt a task, [Earned delegation](./patterns/earned-delegation.md) helps turn those interventions into a better environment. Start with a specific type of work and a narrow permission boundary. If the next attempt needs less coaching while still meeting the same evidence standard, that is useful feedback. A new risk or changed requirement may mean the work needs to come back to its owner.
+
 ## Reuse is not compounding
 
 Keeping more scripts and tests does not automatically make a team faster. When you retain an engineering artifact, it usually ends up in one of four places:

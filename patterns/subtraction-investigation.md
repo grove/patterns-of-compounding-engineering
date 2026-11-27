@@ -74,6 +74,10 @@ Investigating deletion takes time away from everything else. If a low-maintenanc
 
 When a removal lands, judge the win by what gets easier next—one fewer serializer to edit, one dependency upgrade unblocked, one less exception in code review—not by deleted line count. Skip building a "company-wide dead-code dashboard" after one cleanup; standardize your removal checklist only after you have run through it a few times.
 
+## Try the method as a skill
+
+The [subtraction investigation skill](../skills/subtraction-investigation/SKILL.md) distills this procedure into a read-only investigation. Give it a named candidate and ordinary repository access. Ask for sources, blind spots and a recommendation; do not ask it to remove the code yet. [Investigation to skill](./investigation-to-skill.md) explains how to test whether the method works on a case where keeping the capability is the right answer.
+
 ## What clean deletion unlocks
 
 Deletion is the part of compounding teams forget most often. Every dead export, compatibility flag, and pinned library you safely remove lowers the carrying cost of every future change in that service.

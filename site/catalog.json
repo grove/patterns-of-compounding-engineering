@@ -64,6 +64,14 @@
     "keywords": "developer tooling command cli onboarding reproducible environment"
   },
   {
+    "slug": "verified-retrieval",
+    "title": "Verified retrieval",
+    "group": "change",
+    "problem": "We wrote it down. Will the next person use it?",
+    "summary": "Rehearse a task with fresh context and check whether current knowledge changes the plan or result.",
+    "keywords": "knowledge memory documentation retrieval agent context instructions learning handoff"
+  },
+  {
     "slug": "competing-prototypes",
     "title": "Competing prototypes",
     "group": "invest",

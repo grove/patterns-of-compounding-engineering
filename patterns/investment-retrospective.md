@@ -22,7 +22,9 @@ A short note in the tracking issue is plenty:
 Investment: invoice comparison runner
 Expected use: pricing changes that must preserve existing invoice totals
 Current pain: rebuilding fixtures by hand and diffing mismatches manually
-Track: relevant PRs, fixture repairs, cases the runner cannot handle
+Suspected constraint: scarce expert time spent interpreting mismatches; check this against other waits
+Expected outcome: more pricing changes accepted without additional expert time or weaker checks
+Track: relevant PRs, fixture repairs, cases the runner cannot handle, acceptance delays and expert effort
 Review after: three pricing changes, or next quarterly planning
 Options: keep, simplify, fix one gap, archive
 ```
@@ -66,6 +68,12 @@ Cutting a script from ten minutes to ten seconds helps very little if engineers 
 A string of green runs only proves what sits inside the check's scope, and three quiet months never prove a tool prevented incidents. Meanwhile, a rarely run disaster-recovery command can still earn its keep if you rehearse it periodically, so do not judge everything by invocation count.
 
 The [SPACE framework](https://www.microsoft.com/en-us/research/publication/the-space-of-developer-productivity-theres-more-to-it-than-you-think/) makes the broader point well: no single metric captures developer productivity. Keep this review tied to the work you tried to improve, and never turn tool usage or time estimates into individual performance metrics.
+
+## Check whether the constraint moved
+
+The [focusing exercise](../guide.md#use-the-tenfold-ambition-to-choose-the-next-investment) asks which condition limits a worthwhile outcome before choosing an investment. Revisit that diagnosis here. Did the runner free scarce expert attention, or did the team still have to wait for the same decisions? Did changes reach acceptance more readily, or simply move into another queue? Compare a few relevant changes at the same quality bar, including delays, work in progress, demand and cost passed elsewhere.
+
+A saving at one step can be valuable without increasing delivery capacity. It is not evidence that the system improved, nor that another capability became cheaper to build. Record these separately. If the original constraint moved, spend the recovered capacity deliberately and re-evaluate investments aimed at the old one. A check that still protects important behavior may deserve to stay even when it is no longer where the next improvement should go.
 
 ## Make a call, including deleting what failed
 

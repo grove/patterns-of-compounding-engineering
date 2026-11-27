@@ -193,7 +193,7 @@ def home(entries) -> str:
     body = f'''<main id="main">
     <section class="hero content-width" aria-labelledby="page-title">
       <div><p class="eyebrow">The practical companion to Engineering that compounds</p><h1 id="page-title">Patterns of<br>compounding<br><em>engineering.</em></h1></div>
-      <div class="hero-note"><p class="hero-lede">A field guide for the work<br>that keeps coming back.</p><p>A difficult bug, a risky migration, the same comment in every review. Ten patterns for turning everyday engineering work into capabilities your team can use again.</p><div class="hero-links"><a class="button" href="#patterns">Find a pattern</a><a href="guide.html">How to use this guide</a></div></div>
+      <div class="hero-note"><p class="hero-lede">A field guide for the work<br>that keeps coming back.</p><p>A difficult bug, a risky migration, the same comment in every review. {len(entries)} patterns for turning everyday engineering work into capabilities your team can use again.</p><div class="hero-links"><a class="button" href="#patterns">Find a pattern</a><a href="guide.html#use-the-task-already-open">Try it on your next task</a></div></div>
     </section>
     <section class="workbench content-width" aria-labelledby="workbench-title"><div><p class="eyebrow">A worked example you can run</p><h2 id="workbench-title">One invoice. Two deliveries of the same event.</h2><p>Reproduce the double payment, check the fix, then compare two invoice calculators. The examples use Python's standard library and synthetic data.</p><a href="{REPO}/tree/{SOURCE_REF}/examples">Open the billing lab</a></div><div class="terminal"><span class="terminal-label">From the repository root</span><pre tabindex="0"><code>python3 examples/billing_lab.py replay
 python3 examples/billing_lab.py verify
@@ -206,7 +206,7 @@ python3 examples/billing_lab.py compare</code></pre><p>Includes a failing exampl
     </section>
     <section class="closing-note content-width" aria-labelledby="keep-title"><p class="eyebrow">A note on the title</p><div><h2 id="keep-title">More tools do not necessarily mean more progress.</h2><p>A retained test or script earns its place when later work uses it. Each pattern covers what to keep, what it costs to maintain, and when to stop. The <a href="patterns/investment-retrospective.html">investment retrospective</a> is there to check the claim.</p><p>The earlier collections make the argument for software and teams that improve with experience. This guide puts that argument to work on individual changes.</p></div></section>
   </main>'''
-    return shell(TITLE, 'A practical field guide to recurring software problems: ten patterns, worked examples, trade-offs and ways to get started.', body, kind='home-page')
+    return shell(TITLE, f'A practical field guide to recurring software problems: {len(entries)} patterns, worked examples, trade-offs and ways to get started.', body, kind='home-page')
 
 
 def check_links(pages):

@@ -107,6 +107,7 @@ class SiteBuildTests(unittest.TestCase):
         self.write(
             "guide.md",
             "# Using the guide\n\n*Start with a problem.*\n\n"
+            "## Use the task already open\n\nTry one small improvement.\n\n"
             "## Choose a problem\n\n[Replay](./patterns/persistent-reproducer.md)\n",
         )
         self.write(

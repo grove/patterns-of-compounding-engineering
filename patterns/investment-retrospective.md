@@ -58,6 +58,7 @@ Check what moved outside the tool as well. Maybe the team understands billing be
 Cutting a script from ten minutes to ten seconds helps very little if engineers still spend an afternoon arguing over what the output means. Ask harder questions alongside runtime:
 
 - Could someone besides the author run it and interpret a failure?
+- Did they find it through the normal workflow, or did the author have to send a link? [Verified retrieval](./verified-retrieval.md) helps investigate a missed handoff.
 - Did it catch a bug that mattered or verify a real guarantee?
 - Did later work reuse its inputs or structure?
 - Did it push work onto another team or add a new way to break CI?

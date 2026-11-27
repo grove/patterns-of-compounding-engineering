@@ -1,6 +1,6 @@
 # Billing lab
 
-A small local example for the guide's first four patterns. It contains a retained failure, explicit scenario data, executable guarantees and a comparison between implementations. Python 3.10 or later is enough. It makes no network requests, writes no application data and has no package dependencies.
+A small local example for reproducing failures, building scenarios, checking guarantees and comparing implementations. Python 3.10 or later is enough. It makes no network requests, writes no application data and has no package dependencies.
 
 Run the following commands from the repository root.
 

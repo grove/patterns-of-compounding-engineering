@@ -17,8 +17,42 @@ Before you automate or wrap a recurring chore, check whether you can just elimin
 When the underlying work is staying around, jump straight to the pattern closest to your problem:
 
 - [Reproduce a hard failure](./patterns/persistent-reproducer.md), [instrument a production blind spot](./patterns/incident-to-instrument.md), [build awkward states cheaply](./patterns/scenario-builders.md), [check business guarantees](./patterns/executable-invariants.md), or [compare a replacement against legacy code](./patterns/differential-verification.md).
-- [Contain a dependency mess](./patterns/architectural-ratchet.md), [turn a repeated review catch into a check](./patterns/review-comment-to-guardrail.md), or [package an investigation so someone else can run it](./patterns/capability-command.md).
+- [Contain a dependency mess](./patterns/architectural-ratchet.md), [turn a repeated review catch into a check](./patterns/review-comment-to-guardrail.md), [package an investigation so someone else can run it](./patterns/capability-command.md), or [check whether the next person finds the knowledge you kept](./patterns/verified-retrieval.md).
 - [Test competing designs on real cases](./patterns/competing-prototypes.md), [gather evidence before deleting old code](./patterns/subtraction-investigation.md), or [check whether an earlier tool paid off](./patterns/investment-retrospective.md).
+
+## Use the task already open
+
+The fix passes. The pull request is nearly ready. Your terminal still holds the command that finally made the failure make sense. This is a good moment to decide what deserves to survive the session.
+
+[Every's Compound Engineering guide](https://every.to/guides/compound-engineering) gives that decision a place in its plan, work, review, compound loop. The useful borrowing is the habit: finish a piece of work by improving how the next one starts. Here is a small version to try without adopting a new tool or process:
+
+1. **Recover the context.** Before changing code, find the current rule, a relevant past failure and the checks already available. State the expected behavior and any question the evidence cannot answer. A plan can fit in the issue; it needs enough detail to expose a wrong assumption.
+2. **Make the change and check it.** Keep expected behavior anchored in a reviewed requirement or worked example. For a bug fix, watch the check fail on the broken behavior and pass on the correction. Review changes to the expectation as carefully as changes to the implementation.
+3. **Take a compounding pass.** Ask what made this task harder than it needed to be. Repair an existing check, retain a useful input, or put a missing explanation where the next person will look. Keep the smallest thing likely to help again. An ordinary fix may leave nothing extra worth maintaining.
+4. **Try the next use.** On the next related task, see whether someone finds and uses what you kept. A teammate or fresh agent session can rehearse this sooner. If you have to paste in the answer, discovery still needs work. [Verified retrieval](./patterns/verified-retrieval.md) shows how to check this without mistaking a convincing explanation for success.
+
+When a plan missed a recurring question, add that question to the relevant planning guidance. If it missed an unusual detail that will never recur, leave the explanation with this change. A long checklist of every surprise you have ever had is a surprisingly good way to hide the next important one.
+
+## Walk one fix through the loop
+
+The [billing lab](./examples/README.md) is a synthetic example you can run from this repository's root. Imagine you have just diagnosed a payment being applied twice. The retained scenario has an unpaid invoice for 2,400 minor units and two deliveries of the same event. Its reviewed expectation is explicit: 2,400 paid, one event applied. The runner does not derive that expectation from the handler.
+
+Run these commands separately:
+
+```sh
+python3 examples/billing_lab.py replay --implementation buggy
+python3 examples/billing_lab.py replay --implementation fixed
+```
+
+The first reports 4,800 paid and two applied events, then deliberately exits 1. The second keeps the same input and expectation, reports 2,400 and one, and exits 0. You now have evidence that this particular check detects the mistake.
+
+For the compounding pass, keep the [scenario](./examples/scenarios/duplicate-payment.json), the command and the explanation of the expectation. In an application repository, put the check in the existing suite and link to it from the handler's documentation. A separate replay framework can wait until something needs it.
+
+Suppose the next change proposes adding another worker. Give a teammate or fresh agent session that task through the repository's normal entry point. Does it discover the replay and its limits before proposing a design? The lab's fixed handler only deduplicates sequential deliveries in memory. A green replay provides no evidence about concurrent workers, crashes or durable transactions. A useful handoff leads the next engineer to name and investigate that gap.
+
+The PR note can stay short: *Kept the duplicate-delivery case and its expectation. Linked it from the handler docs. Revisit when webhook processing gains another worker or persistent storage.* That sample note describes adapting the lab to an application; the lab itself remains a single-process teaching tool.
+
+If the next task is replacing the invoice calculator, the lab also offers `python3 examples/billing_lab.py verify` and `python3 examples/billing_lab.py compare`. Its [instructions](./examples/README.md) explain the deliberately broken candidate and the calculation rules. Pick the check that answers the task's question.
 
 ## Reuse is not compounding
 
@@ -53,6 +87,7 @@ These patterns do not always point in the same direction. Some stack cleanly; ot
 | [Differential verification](./patterns/differential-verification.md) + [Subtraction investigation](./patterns/subtraction-investigation.md) | Proving a replacement covers real cases clears the main blocker to deleting old code |
 | [Architectural ratchet](./patterns/architectural-ratchet.md) vs. [Competing prototypes](./patterns/competing-prototypes.md) | Real tension: ratchets lock existing boundaries down, while spikes sometimes need to cross them to test a new shape |
 | [Capability command](./patterns/capability-command.md) / [Guardrails](./patterns/review-comment-to-guardrail.md) vs. human understanding | Making checks effortless can hide how the system works unless failure output and walkthroughs keep the mental model visible |
+| [Verified retrieval](./patterns/verified-retrieval.md) + [Capability command](./patterns/capability-command.md) | Finding the right check and running it correctly are separate jobs; rehearse both |
 
 ## Choosing between competing investments
 
@@ -87,33 +122,11 @@ Stop if: It needs a private production snapshot to stay useful.
 
 Scale the budget to the stakes. Some checks take an hour; a cross-service migration takes days.
 
-## Try the billing example
-
-Most of the patterns share a synthetic subscription billing service so you can see how the pieces fit together. It handles async payment events, calculates invoices with credits, deals with pricing changes, and drags around an old CSV export. The bugs are ordinary ones: duplicate webhook delivery, credit larger than an invoice, copy-pasted test setup, a 2 a.m. lock timeout, and a rewrite that passes happy paths while botching the edges.
-
-You can run a small piece of it locally from this repository using the [billing lab](./examples/README.md):
-
-```sh
-python3 examples/billing_lab.py replay --implementation buggy
-python3 examples/billing_lab.py replay --implementation fixed
-python3 examples/billing_lab.py verify
-python3 examples/billing_lab.py compare --candidate buggy
-python3 examples/billing_lab.py compare --candidate correct
-```
-
-Run them one at a time so you can see the exit codes. Both `--implementation buggy` and `--candidate buggy` are supposed to fail, because a check you have never watched fail is hard to trust. The buggy webhook handler applies the same event twice, while the fixed one tracks seen event IDs in memory. The buggy invoice calculator lets applied credit exceed the subtotal and drives the balance negative.
-
-The lab is deliberately toy-sized: single-process, in-memory, no tax, no concurrency, no database transactions. It shows the shape of the checks, not a production ledger.
-
 ## Keep evidence independent (especially with AI)
 
 A retained tool only outlives its author if the next person can tell what it actually proves. Put the command, its assumptions, and sample output beside the code, and be plain about what data is synthetic, what the check catches, and what it leaves uncovered.
 
-Coding agents make generating implementation code and test scaffolding cheap, which pushes the bottleneck onto verification and comprehension. When you already have solid reproducers, invariants, and comparison corpora, cheaper implementation lets you delegate more safely and spend the saved time on harder improvements. When you do not, cheaper code generation mostly yields more code, more tests that mirror the code, and a heavier review burden with less understanding of how the system behaves.
-
-Watch closely for shared assumptions. An agent can generate an implementation, a matching test suite, fixtures, and a confident explanation from the exact same bug. Two generated artifacts agreeing with each other is not independent proof of correctness. Keep the problem statement, boundary cases, and expected outcomes anchored outside the code under test, and read diffs to fixtures and assertions with the same skepticism you give production code.
-
-Do not generalize early either. Three plain 40-line scripts are almost always easier to live with (and easier to delete) than one configurable framework nobody trusts. Extract shared code once real reuse shows you what actually varies.
+Watch closely for shared assumptions. An agent can generate an implementation, a matching test suite, fixtures, and a confident explanation from the same mistaken premise. More reviewers agreeing with that premise do not establish it. Keep the problem statement, boundary cases, and expected outcomes anchored outside the code under test. Where a business rule is unsettled, ask its owner; another generated test cannot settle it.
 
 ## Check upkeep, and know where this guide stops
 
@@ -121,11 +134,11 @@ A clean first run only tells you an idea worked once. The next two or three real
 
 Watch someone else pick the tool up. Notice where they pause, whether they bypassed it because it did not cover refunds, or whether fixing a fixture took longer than the bug fix itself. The [investment retrospective](./patterns/investment-retrospective.md) gives you a lightweight way to check both individual tools and the combined drag of everything you have accumulated, without pretending rough numbers are hard science. Deleting a tool that stopped earning its keep is a good day's work.
 
-One deliberate boundary: this guide covers code, tests, telemetry, and local workflows an engineering team controls directly. It is not a continuous-delivery handbook or an org-design book. Technical tools alone cannot force compounding; if a team frees up 20% of its capacity and the organization immediately absorbs all of it into feature throughput, nothing gets reinvested. The organizational half (incentives, capability traps, and room to reinvest) lives in [Organizations that improve with age](https://grove.github.io/engineering-that-compounds/essays/organizations-that-improve-with-age.html).
+This guide covers code, tests, telemetry, engineering memory and local workflows an engineering team controls directly. Technical tools alone cannot protect time for their upkeep or settle who pays for an improvement that benefits another team. Those questions belong to [Organizations that improve with age](https://grove.github.io/engineering-that-compounds/essays/organizations-that-improve-with-age.html).
 
 ## About the sources and examples
 
-The pattern names are editorial handles for established techniques (property testing, Object Mother, differential testing, frozen architecture rules, structured observability, online migrations) rather than claims of invention. Every pattern links to primary tools or practitioner write-ups and separates what generalizes from what belongs to a specific stack.
+The pattern names group established techniques (property testing, Object Mother, differential testing, frozen architecture rules, structured observability, online migrations) and proposed practices such as the retrieval rehearsal. Sources explain the origin of an idea and its limits; a citation does not establish that an investment will pay off in your team.
 
 The billing scenarios and retrospective tables are invented for teaching, not empirical case studies. This collection builds on [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/), though it is meant to stand on its own.
 

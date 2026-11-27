@@ -90,6 +90,8 @@ A command makes a procedure easy to run long before it transfers the mental mode
 
 Test transfer directly: ask a teammate to run the command, predict what happens if they break one line of the handler, and explain the failure output in their own words. Their questions tell you where the output or docs are hiding how the system actually works.
 
+Also check how they would find it. Give someone the underlying task without the command name and observe where they look. [Verified retrieval](./verified-retrieval.md) rehearses that earlier part of the handoff, including whether they notice the command's limits before relying on a green result.
+
 ## What a good command enables, and sources
 
 Once an investigation is packaged behind a clean, repeatable entry point, it stops belonging to one person's laptop. Newcomers can verify changes on day one, CI runs the exact same check developers run locally, and agents can run fast feedback loops without risking shared environments.

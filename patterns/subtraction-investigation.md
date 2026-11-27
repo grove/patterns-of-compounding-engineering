@@ -2,19 +2,19 @@
 
 *Gather the evidence you need to delete old software, or prove why you cannot yet.*
 
-Every time pricing changes, someone has to update a legacy CSV export too. It has its own serializer, its own fixtures, and an old compatibility flag. Nobody on the team remembers which customer uses it. Deleting it feels overdue, yet proving that deleting it will not break month-end close takes real detective work that keeps getting pushed to next sprint.
+Every time pricing changes, someone has to update a legacy CSV export too. It has its own serializer, its own fixtures, and an old compatibility flag. Nobody on the team remembers which customer uses it. Deleting it feels overdue, yet proving it will not break month-end close takes detective work that keeps getting pushed to next sprint.
 
-A subtraction investigation puts a small, explicit budget on answering that question. Pick one target, trace who still depends on it, and make a concrete call: remove it, shrink it, or leave it alone. Discovering a real consumer and deciding *not* to delete is a good outcome. It beats finding out on the last Friday of the month.
+A subtraction investigation puts a small, explicit budget on answering that question. Pick one target, trace who still depends on it, and make a concrete call: remove it, shrink it, or leave it alone. Finding a real consumer and deciding *not* to delete beats breaking finance's month-end job on the last Friday of the month.
 
-Use this for dead feature flags, compatibility layers, cron jobs, config knobs, and duplicated code paths that are actively costing you time: repeated edits, noisy support tickets, or a pinned dependency blocking upgrades. "That directory looks big" is rarely enough reason on its own.
+Save this for dead feature flags, compatibility layers, cron jobs, config knobs, and duplicated code paths that are actively costing you time: repeated edits, noisy support tickets, or a pinned dependency blocking upgrades. "That directory looks big" is rarely enough reason on its own.
 
-## Draw a sharp box around the candidate
+## Draw a box around the target
 
-In our billing service, say the target is the legacy monthly invoice CSV export: its HTTP endpoint, serializer, scheduled delivery job, and rollout flag. Historical invoice rows and the newer export format stay untouched.
+In our billing service, say the candidate is the legacy monthly invoice CSV export: its HTTP endpoint, serializer, scheduled delivery job, and rollout flag. Historical invoice rows and the newer export format stay untouched.
 
-State the cost in concrete terms: every new invoice field forces edits to two serializers, and the old one pins an outdated library nobody else needs. "Cleaner code" is too vague to weigh against operational risk.
+Name the cost plainly: every new invoice field forces edits to two serializers, and the old one pins an outdated library nobody else needs. "Cleaner code" is too vague to weigh against operational risk.
 
-Check who owns the *capability* as well as the repository. Engineering owns the code, yet another team may depend on its output every month. Retiring an organizational obligation usually takes more negotiation than deleting the files, so find the person with authority to sign off early.
+Check who owns the *capability* as well as the repository. Engineering owns the code, while another team may rely on its output every month. Retiring a cross-team obligation usually takes more coordination than deleting the files, so find the person with authority to sign off before you write a deletion PR.
 
 ## Cross-check code and runtime evidence
 
@@ -25,17 +25,17 @@ Then check runtime telemetry, and interrogate every zero before celebrating:
 - Does the metric cover every region, tenant, and entry point?
 - Could requests be sampled, filtered out, or dropped when logging fails?
 - Did you watch across the full business cycle (month-end, quarter-end, tax year)?
-- Is this code only hit during failover or manual recovery?
+- Is this path only hit during failover or manual recovery?
 
 In our billing example, HTTP logs show zero requests to the legacy download endpoint for ninety days. It looks dead until you notice the scheduled job still drops CSV files into a shared bucket, and finance's month-end script reads that bucket directly. Endpoint logs were completely blind to the real consumer.
 
-Proving the absence of a dependency is intrinsically hard, so write down your blind spots. When storage access logs cannot identify the reader, check the consumer's job config, talk to the team running it, or run a controlled rehearsal.
+Proving the absence of a dependency is intrinsically hard, so write down your blind spots. When storage access logs cannot identify the reader, check the consumer's job config, talk to the team running it, or add targeted instrumentation (the same habit as [incident to instrument](./incident-to-instrument.md)) before rehearsing removal.
 
-## Separate current traffic from real obligations
+## Separate live traffic from real obligations
 
 Annual tax reports, audit exports, emergency fallback paths, and contractual formats sit quiet for months and still matter on the one day they run. Let the business cycle set your observation window instead of an arbitrary "30 days of zero traffic" rule.
 
-When you find a consumer, ask what they truly depend on. Often it is a specific column order or drop schedule rather than the whole legacy subsystem. A thin adapter over the newer export might satisfy finance's importer and let you delete the old serializer and its pinned dependency — just remember that an adapter is still code with an owner and tests.
+When you find a consumer, ask what they actually depend on. Often it is a specific column order or drop schedule rather than the whole legacy subsystem. A thin adapter over the newer export might satisfy finance's importer and let you delete the old serializer and its pinned dependency (remembering that an adapter is still code with an owner and tests).
 
 Keep data retention separate from code deletion. Stopping a delivery job does not authorize wiping historical exports, and destructive schema drops change what rollback looks like. Settle data retention explicitly before touching anything irreversible.
 
@@ -64,7 +64,7 @@ A kill switch only protects you if the old path still works against current data
 
 ## Finish the cleanup cleanly
 
-Once the sign-off conditions hold, remove the lot: dead code, flags, retired-behavior tests, cron entries, alerts, docs, and the dependency it was pinning. Move any tests covering obligations that still apply onto the replacement path.
+Once sign-off conditions hold, remove the lot: dead code, flags, retired-behavior tests, cron entries, alerts, dashboards, docs, and the dependency it was pinning. Move any tests covering obligations that still apply onto the replacement path.
 
 Leave a brief tombstone note in the commit or decision log recording what was removed and why, so a future engineer is not mystified by a vanished config flag. GitHub's [feature-flag cleanup write-up](https://github.blog/engineering/infrastructure/ship-code-faster-safer-feature-flags/) gives a practical look at automating mechanical branch cleanup once the human decision is settled. Automation rewrites stale branches cleanly, yet it still cannot tell you whether finance has an undocumented cron job reading your S3 bucket.
 
@@ -72,8 +72,10 @@ Leave a brief tombstone note in the commit or decision log recording what was re
 
 Investigating deletion takes time away from everything else. If a low-maintenance component turns out to have a real consumer and migrating them costs more than living with the code, stop. Write down what you learned about ownership and consumers next to the code so the next person starts miles ahead.
 
-When a removal lands, judge the win by what gets easier next — one fewer serializer to edit, one dependency upgrade unblocked, one less exception in code review — instead of counting deleted lines. Resist building a "company-wide dead-code dashboard" after one cleanup; standardize your removal checklist only after you have run through it a few times.
+When a removal lands, judge the win by what gets easier next—one fewer serializer to edit, one dependency upgrade unblocked, one less exception in code review—not by deleted line count. Skip building a "company-wide dead-code dashboard" after one cleanup; standardize your removal checklist only after you have run through it a few times.
 
-## How it connects
+## What clean deletion unlocks
 
-Subtraction is often the final step after [differential verification](./differential-verification.md) proves a replacement meets a consumer's real needs, or after an [architectural ratchet](./architectural-ratchet.md) stops new callers from hooking onto code you want to retire. Apply the same discipline to your own internal tools whenever an [investment retrospective](./investment-retrospective.md) flags something that no longer earns its keep.
+Deletion is the part of compounding teams forget most often. Every dead export, compatibility flag, and pinned library you safely remove lowers the carrying cost of every future change in that service.
+
+Subtraction is often the closing move after [differential verification](./differential-verification.md) proves a replacement covers real cases, after [incident to instrument](./incident-to-instrument.md) gives you visibility into who still calls the old path, or after an [architectural ratchet](./architectural-ratchet.md) stops new callers from hooking onto code you plan to retire. Apply the same discipline to your own internal tools whenever an [investment retrospective](./investment-retrospective.md) flags something that stopped earning its keep.

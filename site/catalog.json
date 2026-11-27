@@ -8,6 +8,14 @@
     "keywords": "bug incident replay webhook duplicate debug"
   },
   {
+    "slug": "incident-to-instrument",
+    "title": "Incident to instrument",
+    "group": "reproduce",
+    "problem": "We fixed the outage, and next time we will still be flying blind.",
+    "summary": "Turn a hard production investigation into permanent telemetry that exposes the same failure class early.",
+    "keywords": "incident observability telemetry metrics traces logs production outage debugging"
+  },
+  {
     "slug": "scenario-builders",
     "title": "Scenario builders",
     "group": "reproduce",

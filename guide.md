@@ -100,6 +100,33 @@ Use [verified retrieval](./patterns/verified-retrieval.md) when someone repeated
 
 Keep the boundary narrow until unfamiliar tasks meet the same acceptance standard with less total supervision and rework. A missing business decision needs its owner, even when a procedure is easy to find.
 
+### Let a recurring job run on its own
+
+Suppose a service gets several routine dependency updates a week. An engineer can already ask an agent to prepare the lockfile and run the tests. The next experiment is to find out whether someone needs to start each update at all. The following is an adaptation sketch for a team with a dependency updater and CI, not a runnable dependency-management bot.
+
+| Part of the job | What to put in place |
+| --- | --- |
+| Discover | A scheduled updater checks an explicit list of dependencies; record all eligible versions and missed or failed attempts |
+| Prepare | A disposable branch and isolated test environment; restrict changed files, dependency scope and credentials |
+| Check | A [capability command](./patterns/capability-command.md) for the normal suite, with [executable invariants](./patterns/executable-invariants.md) for behavior the service relies on |
+| Decide | Initially a person reviews every candidate; later a separately enforced policy may accept eligible changes whose exact integrated candidate passes all required checks |
+| Follow up | Normal release and recovery procedures, a visible queue of failures and an owner who can suspend the automation |
+
+You can rehearse the verification part with the existing [evolving billing lab](./examples/evolving-billing/README.md). Run these separately from the repository root:
+
+```sh
+python3 examples/evolving-billing/replay.py verify --implementation atomic
+python3 examples/evolving-billing/replay.py verify --implementation split
+```
+
+The first command should exit 0; the second deliberately exits 1 because interrupted writes can leave a recorded event without its payment. A caller can use the status to stop a candidate from proceeding and preserve the diagnostic output for investigation. The lab exercises synthetic storage behavior, not dependency compatibility or production safety. In a real job the independently maintained check must run against the proposed candidate; a green result from an older commit or a check the candidate has weakened is not sufficient.
+
+Try the actual workflow with a narrow allowance and human review. Use [earned delegation](./patterns/earned-delegation.md) to examine interventions before expanding that allowance. If a job keeps stopping because it cannot obtain a useful explanation from a test failure, improve the command's output. If it stops because a dependency changes the meaning of a timestamp, someone needs to settle that meaning. Do not let the job change its own acceptance rules or permissions. Keep the ordinary release safeguards.
+
+Count time spent on discovery, coordination, exceptions, review and recovery, as well as building and maintaining the job. An unattended completion is useful only if the required outcome is actually met. Sample successful runs and compare them with the same work before automation; do not count a missed update as a saving.
+
+The next investment might be a runtime-upgrade rehearsal using the same isolated setup, retained cases and acceptance command. Keep a note of which pieces transfer and which need new work, and revisit the cost with an [investment retrospective](./patterns/investment-retrospective.md). Running the same check every week earns recurring returns; making that new rehearsal cheaper to build is the possible compounding step. The [automation essay](https://grove.github.io/engineering-that-compounds/essays/automating-the-work-of-engineering.html) works through the economics of this example.
+
 ## How patterns reinforce and pull against each other
 
 These patterns do not always point in the same direction. Some stack cleanly; others create real tension you have to manage on purpose.

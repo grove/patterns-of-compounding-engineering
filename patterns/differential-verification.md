@@ -1,70 +1,66 @@
 # Differential verification
 
-*Run the old and new implementations on the same cases.*
+*Run the old and new implementations on the same inputs, then sort out every disagreement.*
 
-The team wants to replace an invoice calculator. The existing code is difficult to change, yet it embodies years of exceptions that nobody can list confidently. A new implementation passes the tests the team understands. The question is what those tests have missed.
+You want to replace an aging invoice calculator. Nobody loves the old code, yet it encodes years of weird exceptions that nobody can list from memory. Your rewrite passes every test the team knows how to write, which still leaves the nagging question: what did those tests forget?
 
-Run both implementations on the same inputs and inspect their differences before switching. This makes the existing system a useful source of evidence, including evidence of behavior the team may decide to correct.
+Run both implementations side by side on the same inputs and inspect every difference before cutting over. You turn the legacy system into an evidence source without pretending it's infallible; some disagreements will turn out to be old bugs you actually want to fix.
 
-The technique has established uses. [GitHub's Scientist library](https://github.com/github/scientist) runs a control and a candidate, compares their results and returns the control's result. [SQLite's testing documentation](https://sqlite.org/testing.html) describes comparing SQL results across database engines. Neither comparison makes agreement synonymous with correctness: both implementations can share a mistake.
+This is a well-worn technique. [GitHub's Scientist](https://github.com/github/scientist) runs a control and a candidate, logs mismatches, and always returns the control's result. [SQLite's test suite](https://sqlite.org/testing.html) compares query outputs across different database engines. In both cases, agreement still doesn't prove correctness. Two implementations can happily share the exact same bug.
 
-## Find a boundary with observable results
+## Pick a clean boundary first
 
-Start with a calculation, query or transformation whose inputs can be captured and whose outputs can be compared. For the illustrative billing service, that boundary accepts line items and requested credit and returns an invoice calculation. Sending the invoice and charging the customer happen outside it.
+Start with a calculation, query, or transform where you can capture all inputs and inspect the output directly. In our billing service, that boundary takes line items plus requested credit and returns the invoice breakdown; sending emails and charging cards stay outside it.
 
-Define the input completely. If the calculator consults today's date, a feature flag, account history or a price table, pass or capture those values too. Otherwise the two runs may answer different questions even though they received the same request object.
+Capture *every* input the code depends on. If the calculator reads today's date, a feature flag, account history, or a price table, pass those in explicitly or freeze them in the snapshot. Otherwise the old and new implementations aren't answering the same question.
 
-Avoid sharing mutable inputs between runs. One implementation may normalize a collection in place, leaving altered input for the second. Use immutable values or separate copies. For database queries, account for changes between reads; a consistent snapshot or a recorded dataset can be more useful than comparing two live queries that observe different transactions.
+Never hand both runs the same mutable object. If the old code sorts or normalizes a list in place, the candidate sees already-mutated input. Pass immutable values or deep copies. For database reads, compare against a fixed snapshot or recorded dataset rather than running two live queries that might straddle a concurrent write.
 
-If you cannot isolate external effects, begin offline. A flag called `dry_run` is only as good as every path that honors it. Make it structurally difficult for the candidate to send email, charge a card or write to an authoritative store.
+If you can't completely isolate side effects, start offline. A `dry_run` boolean is only as trustworthy as every branch that remembers to check it. Make it structurally hard for the candidate to send email, charge a card, or write to a real table.
 
-## Define what counts as the same answer
+## Decide what counts as equal
 
-Compare business outputs rather than object identities or incidental serialization. For the billing example, compare subtotal, applied credit, unused credit and amount due. If the system accepts multiple currencies, compare currency too. A new trace ID should not count as a pricing difference.
+Compare business outputs, not object identities or incidental metadata. For an invoice, compare subtotal, applied credit, unused credit, amount due, and currency (if you support more than one). A freshly generated trace ID shouldn't show up as a billing discrepancy.
 
-Be conservative about normalization. Sorting an unordered result can be appropriate; sorting a ranked search result would erase meaningful behavior. Removing timestamps is reasonable only when they are incidental to the contract. Never introduce a broad numeric tolerance merely to make a money comparison pass. Agree on rounding rules first.
+Be careful when normalizing outputs. Sorting an unordered set makes sense; sorting a ranked search list hides real regressions. Stripping timestamps is fine when they're incidental. Never slap a loose numeric tolerance on money just to quiet noisy diffs; settle the rounding rules first.
 
-Compare failure behavior as well as successful results. A candidate that rejects an invalid input previously accepted may be an intentional tightening of the contract. A candidate that raises on a valid legacy account is a migration problem. Keep those outcomes separate from ordinary value mismatches.
+Compare errors as well as normal returns. A candidate that rejects malformed input the old code quietly accepted might be an intentional improvement, or it might break a legacy caller. Either way, keep error mismatches separate from value mismatches.
 
-In the [billing lab](../examples/README.md), run:
+You can see a small local version in the [billing lab](../examples/README.md):
 
 ```sh
 python3 examples/billing_lab.py compare --candidate correct
 python3 examples/billing_lab.py compare --candidate buggy
 ```
 
-The second candidate is deliberately wrong. It gives the comparison something concrete to catch. Both commands work on local synthetic data and have no payment or messaging effects. A successful comparison covers that corpus only.
+The buggy candidate lets credit exceed the subtotal and prints the failing inputs alongside both outputs before exiting 1. Both runs stay local on synthetic data with no external effects, so a green run only speaks for that corpus.
 
-## Build a corpus with awkward cases
+## Build a corpus full of awkward cases
 
-Begin with a handful of cases the team can explain: ordinary credit, no credit, credit that exhausts the invoice, and credit left over after it. Include [persistent reproducers](./persistent-reproducer.md) from earlier bugs. Use [scenario builders](./scenario-builders.md) to vary the details without duplicating setup.
+Start with a handful of cases you can reason through by hand: normal credit, zero credit, exact credit, excess credit. Fold in your [persistent reproducers](./persistent-reproducer.md) from past incidents, and use [scenario builders](./scenario-builders.md) to vary combinations without copy-pasting setup.
 
-Later, recorded production inputs can expose combinations absent from synthetic cases. Decide which fields are necessary, remove sensitive material, and preserve the relationships relevant to the computation. Data capture and retention become part of the experiment's cost. A small reviewed sample may answer the current question better than a permanent traffic archive.
+Once the synthetic cases pass, sampled production inputs often uncover combinations nobody imagined. Decide which fields you need, strip sensitive customer data, and keep the sample small enough to inspect. A curated, reviewed set usually answers your migration question faster and more safely than a permanent traffic archive.
 
-Look at coverage by meaningful class. A large sample of ordinary monthly invoices says little about an annual contract with a mid-period change. Record missing classes explicitly. Rare cases often need deliberate construction or a longer observation period.
+Check coverage by *category*, not volume alone. Ten thousand ordinary monthly invoices won't tell you whether an annual contract with a mid-cycle upgrade works. Note the missing classes explicitly, because rare cases usually need deliberate construction or a longer capture window. Also watch for policy drift: running last year's invoices through this year's price table will surface diffs that reflect changed rules rather than bugs.
 
-Historical inputs also depend on historical rules. If a current price table is applied to last year's invoices, differences may reflect a changed context rather than a defect. Preserve the policy version or narrow the experiment's claim.
+## Classify every mismatch, and don't let legacy win by default
 
-## Decide what each difference means
+Your diff report should point straight to the input case, highlight which fields disagreed, and make both runs easy to replay. "99.8% match" is a terrible decision metric when the missing 0.2% involves money or authorization.
 
-Produce a report that lets a developer locate the case, understand which fields differ, and reproduce both results. A percentage of matching outputs is insufficient for a decision when the remaining differences involve money or permissions.
+Sort each mismatch into one of four buckets: a bug in the candidate, an intentional fix, a flaw in the comparator, or still under investigation.
 
-Classify each difference as a candidate defect, an intended correction, a comparison problem, or a case still under investigation. An intended correction needs an expected outcome supported by the policy owner or an independent rule. Add a focused test so it does not remain an unexplained exception in the comparator.
+Here is the real hazard with differential verification: **behavioral compatibility can quietly turn into a veto against fixing old mistakes.** Teams get hooked on chasing 100% parity and end up reproducing legacy quirks nobody wanted. Whenever a mismatch looks like an intentional correction, check it against your [executable invariants](./executable-invariants.md) and confirm it with the policy owner, then lock in the new expected behavior with a dedicated test and plan the migration impact openly.
 
-[Executable invariants](./executable-invariants.md) are useful here. If both implementations agree but violate a reviewed guarantee, agreement should not win the argument. If the candidate differs because it satisfies a rule the old code violates, document that as a behavior change and plan the migration accordingly.
+Set your cutover bar before scaling up: every known input class represented, zero unexplained monetary diffs, and an explicit call on every intentional change.
 
-Set the decision criteria before expanding the experiment. For example: all known input classes represented, no unexplained monetary differences, and explicit treatment of every intended change. These are proposed criteria for the example, not universal release thresholds.
+## Be careful with production shadow traffic
 
-## Take care when moving into production
+Running the candidate alongside the old path on live traffic ("shadow execution") adds load and can shift latency. Measure the overhead, cap the sample rate, put it behind a kill switch, and isolate candidate exceptions so a failing experiment never breaks the live response.
 
-To compare on production traffic, run the candidate alongside the old implementation while only the old result determines the response. This is often called shadow execution. It adds load and may change timing. Measure the overhead, cap the sample and give the experiment an off switch. Isolate candidate failures so they cannot prevent the authoritative operation from completing.
+Scientist explicitly warns that experiments must be read-only and that it doesn't guard requests against slow candidate timeouts. Double-check caches, database load, and outbound HTTP calls; even doubling read traffic can hurt customers at peak load. And don't trust candidate latency measured right after the old code warmed the cache. Benchmark performance separately if speed is part of the rewrite's goal.
 
-Scientist supports custom comparisons and cleaned reporting values. Its documentation restricts experiments to methods that do not change data and warns that it does not protect requests from candidate timeouts. Review caches, database writes and outbound calls at the boundary. Even a read can be expensive enough to affect customers when doubled.
+## Tear down the dual run when you're done
 
-Do not infer production latency from a candidate run on a warm cache immediately after the old implementation. Benchmark performance deliberately if that is part of the replacement's purpose. Correct outputs and acceptable operating cost are separate questions.
+Once you've cut over and survived your observation window, delete the dual-execution plumbing, temporary flags, and old implementation. Keeping two implementations alive "just in case" quietly eats the savings the rewrite was supposed to deliver.
 
-## Remove the experiment when it has answered its question
-
-Keep the useful corpus and a small comparison adapter if another replacement is likely. Remove dual execution, temporary flags and the obsolete implementation after the switch and its agreed observation period. Maintaining both forever can consume the savings the replacement was meant to create.
-
-The evidence of value is specific: a mismatch found before cutover, a previously unknown exception made explicit, or a later implementation evaluated with the existing corpus. Record those uses alongside the time spent investigating noisy differences and maintaining adapters. If the comparator mostly reports irrelevant changes, narrow its contract before trusting its results.
+If you expect more pricing changes later, keep the curated corpus and a thin comparison adapter. Otherwise, archive it. The evidence that this paid off is concrete: a bug caught before cutover, an undocumented legacy exception brought into the light, or a future rewrite checked against the same corpus. If the comparator spends most of its time flagging harmless noise, tighten what it compares before trusting its green lights.

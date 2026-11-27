@@ -1,32 +1,32 @@
 # Executable invariants
 
-*Write down the guarantees that must survive a change.*
+*Turn the rules the business actually depends on into checks that hold across many inputs.*
 
-A billing test expects an invoice total of 8,750. The implementation returns 8,750. That is useful evidence for one case, but the number tells a reviewer little about what the system promises. Does credit reduce the amount due? Can it make the balance negative? Is the same payment allowed to affect two invoices?
+A unit test asserts that an invoice total equals 8,750, and the code returns 8,750. That confirms one calculation, yet tells a reviewer almost nothing about what the system promises. Can credit push the balance below zero? Does line-item order matter? Can one payment settle two invoices?
 
-An invariant states a relationship that should hold across a defined set of situations. It gives tests something to challenge when the inputs change. The hard part is deciding which relationship the business actually requires.
+An invariant states a relationship that must hold across a whole space of inputs, not just one hand-picked example. The tricky part is rarely writing the assertion; it's getting clear on what the business actually requires.
 
-Use this pattern when the team repeatedly explains the same rule, when examples miss important combinations, or when replacing an implementation would otherwise mean trusting its old outputs wholesale.
+Reach for invariants when the team keeps re-explaining the same rule in reviews, when hand-picked examples keep missing ugly combinations, or when you're about to replace legacy code and don't want to treat its old outputs as gospel.
 
-## Agree on the boundary of the claim
+## Spell out where the rule applies
 
-For the illustrative billing model in this guide, assume one currency and integer minor units, with nonnegative quantities, unit prices and requested credit. There is no tax or prorating. Requested credit may exceed the current invoice. The model applies credit only up to the subtotal and leaves the rest unused.
+Take our simplified billing model: one currency, integer minor units, nonnegative quantities and prices, no tax or proration. Requested credit can exceed the invoice subtotal, and any leftover credit stays unused.
 
-Under those assumptions, useful relationships include:
+Under those rules, a few guarantees stand out immediately:
 
-- Applied credit is between zero and the subtotal, inclusive.
-- Amount due plus applied credit equals the subtotal.
+- Applied credit stays between zero and the subtotal.
+- Amount due plus applied credit always equals the subtotal.
 - Applied credit never exceeds requested credit.
-- Reordering invoice lines does not change the result.
-- Delivering the same payment event again does not apply the payment again.
+- Reordering invoice lines produces the exact same result.
+- Replaying the same payment event doesn't apply the payment twice.
 
-These rules are proposals for this small model, not universal rules for billing. A system that represents account credit as a negative balance needs different assertions. An invoice with tax, exchange rates or line-level rounding needs a more detailed contract. State those limits beside the check so a future developer can tell when it stops applying.
+None of these are universal laws of accounting. If your system represents account credit as a negative balance, or applies per-line tax rounding and FX rates, your invariants look completely different. Write those scope boundaries right beside the check so the next engineer knows when the rule stops being valid instead of treating a stale assumption as bedrock.
 
-Ask the person who owns the policy to review a few boundary examples. Zero credit, credit exactly equal to the subtotal, and excess credit often expose disagreements that a normal invoice conceals. Resolve the disagreement before encoding it as a release gate.
+Walk a few boundary cases past whoever owns the business policy before turning them into CI gates. Zero credit, credit exactly equal to the subtotal, and excess credit are where hidden policy disagreements usually surface.
 
-## Check relationships independently
+## Keep the check independent of the code
 
-The following is illustrative test logic for that contract. `calculate` is the implementation under test; the result fields are explanatory names:
+Here's the shape of those assertions in Python (`calculate` is the function under test):
 
 ```python
 result = calculate(lines, requested_credit)
@@ -37,48 +37,46 @@ assert result.credit_applied <= requested_credit
 assert result.amount_due + result.credit_applied == subtotal
 ```
 
-Those assertions still allow some wrong results. An implementation that never applies any credit would satisfy all three. Add an independently agreed example for a 1,000 subtotal and 300 requested credit: 300 applied and 700 due. Add the boundary case where requested credit exceeds the subtotal. Properties and examples cover different gaps.
+Those three lines still leave a hole: a buggy implementation that always sets `credit_applied = 0` passes all three without blinking. Pair invariants with a couple of independently worked examples (say, 1,000 subtotal with 300 credit gives 300 applied and 700 due, plus an excess-credit case). Properties catch weird combinations; worked examples pin down the concrete behavior.
 
-A test oracle is the source of the expected answer. Keep it easy to inspect. Calling the same production helper to compute both expected and actual values checks that the helper agrees with itself. A simple expression for a limited contract, a reviewed worked example, or a separately maintained model can provide a useful independent check. Independence depends on the assumptions and implementation; moving a copy into another file does not provide it.
+Watch your test oracle. Calling a production helper inside the test to compute the expected answer only proves the helper agrees with itself, and copying that helper into a test file doesn't make it independent either. Real independence comes from a simpler formula for a restricted case, a hand-verified example, or a separate reference model.
 
-The [billing lab](../examples/README.md) runs a small set of such checks with:
+This matters even more with AI coding agents. If you hand an agent an implementation and ask for invariant tests, it can easily derive the "invariants" from the code's existing bugs, giving you green checks built on the exact same mistaken assumption. Give the agent the policy and boundary examples *before* showing it the implementation, and ask what assumptions its checks leave untested.
+
+You can run a small version of these checks in the [billing lab](../examples/README.md):
 
 ```sh
 python3 examples/billing_lab.py verify
 ```
 
-The lab uses a finite set of inputs and deliberately simple policies. Passing it establishes only what those checks exercise. It is not a production billing specification.
+It checks a finite, deterministic grid of cases with deliberately simple rules, so passing it is evidence about that small contract, not a full billing spec.
 
-## Choose inputs that challenge the rule
+## Pick inputs that try to break the rule
 
-Begin with the boundaries you can explain: zero, one unit, exact credit, excess credit, empty inputs if permitted, and the largest supported amount. Include invalid inputs separately and define their expected rejection behavior. Mixing invalid states into an ordinary property without specifying what should happen makes failures ambiguous.
+Start with the boundaries you can explain on a whiteboard: zero, one unit, exact credit, excess credit, empty lists (if valid), and the upper limit you support. Test invalid inputs separately with explicit expected errors; mixing bad inputs into an ordinary property makes failures murky.
 
-Property-based testing can generate more combinations and reduce failing inputs to manageable examples. [Hypothesis's stateful testing documentation](https://hypothesis.readthedocs.io/en/latest/stateful.html) goes further by generating sequences of actions and checking them against a model. That is useful when correctness depends on a history of payments, retries and refunds rather than one calculation.
+Once the rules are clear, property-based testing can explore combinations you wouldn't think to type by hand and shrink failures down to small counterexamples. When correctness depends on a *sequence* of events (payments, retries, refunds, cancellations), [Hypothesis's stateful testing](https://hypothesis.readthedocs.io/en/latest/stateful.html) lets you generate action histories and check them against a model.
 
-Keep the generator's assumptions visible. A generator that always emits positive balances cannot find a bug involving exhausted credit. A generator that always presents events in order cannot test a handler's response to reordered delivery. Inspect the actual inputs produced, including whether the boundary cases you care about appear.
+Always inspect what your generators actually produce. A generator that only builds positive balances will never catch an exhausted-credit bug; one that only emits ordered events won't catch out-of-order delivery. When a property uncovers a real bug, pin that input as a [persistent reproducer](./persistent-reproducer.md) so the team keeps the concrete case even while the generator keeps exploring.
 
-Retain a meaningful failing input as a [persistent reproducer](./persistent-reproducer.md). The property can keep exploring while the retained example protects a failure the team now understands.
+## State the consistency boundary
 
-## Be precise about time and state
+Some invariants must hold after every single operation; others only hold once a transaction commits or an async worker catches up. Checking a ledger mid-transfer will complain about a temporary imbalance that disappears at commit time. Checking only the final total can miss a broken intermediate state that another reader observes.
 
-Some guarantees should hold after every operation. Others hold only after a transaction commits or a batch finishes. Checking a ledger halfway through an intentional transfer can report an imbalance that disappears at the actual consistency boundary. Conversely, checking only the final balance can miss an invalid intermediate state that another reader can observe.
+Be explicit about when the guarantee kicks in. For an async invoice projection, "matches the ledger once processed up to event N" is testable; "matches after waiting two seconds" is a flake waiting to happen.
 
-Name the boundary. For an asynchronous invoice projection, the claim might be that the projection agrees with the authoritative ledger once processing has reached a specified event position. A timeout alone does not describe what completion means.
+The same precision applies to identity. Re-delivering `evt_001` is a duplicate; a customer paying the same 2,400 amount a second time under `evt_002` is a legitimate payment. Deduplicating by amount would silently drop real revenue. And remember that an in-memory set only models the rule; production idempotency needs a failure-safe link between the deduplication record and the payment write.
 
-The payment-retry guarantee also needs a definition of identity. The same event delivered again differs from a second legitimate payment for the same amount. Reusing an amount as a deduplication key would reject valid work. In production, the durable deduplication record and the payment effect need a failure-safe relationship; an in-memory set demonstrates the rule but cannot provide it across processes.
+## Make sure the checks can actually fail
 
-## Check that the checks can fail
+Temporarily break the code in an isolated copy: allow excess credit, drop a line item, or disable duplicate checks. Your invariants should fail loudly and for the right reason. If they stay green, either your inputs never hit the bug or your assertions are too weak.
 
-Temporarily introduce a plausible defect in an isolated copy: apply excess credit, forget one line, or process a duplicate payment. The relevant check should fail for an understandable reason. If it does not, either the inputs never reach the defect or the property is too weak.
+You don't need a full mutation-testing pipeline to get most of this benefit; one or two hand-injected bugs answer the immediate question. ([SQLite's testing write-up](https://sqlite.org/testing.html) includes mutation testing among its layers of defense, and it's a good reminder to test your tests as well as your code.)
 
-This need not become a project-wide mutation-testing initiative. One deliberately broken implementation can answer the immediate question. [SQLite's testing account](https://sqlite.org/testing.html) describes mutation testing among its broader verification techniques; it is a useful example of questioning the test machinery itself.
+## Keep invariants from rotting into snapshots
 
-When asking an agent to suggest missing cases, supply the policy and examples before the implementation. Ask which assumptions its proposed checks leave untested. Review those assumptions yourself: a plausible assertion may simply repeat the mistake in the code.
+Business rules change, and invariants have to move with them. When a policy shifts, review the affected checks, update the scope notes, and record why the rule changed. Even an independently written invariant is only as good as the domain assumptions behind it; letting an outdated rule linger teaches everyone to silence or skip the suite.
 
-## Keep the guarantees useful
+A good sign that an invariant is working is that it catches real regressions, shortens reviews, or helps evaluate a rewrite. A bad sign is engineers routinely editing expected values to match code changes without discussing behavior; at that point you're maintaining brittle snapshots wearing a fancier name.
 
-An invariant carries a maintenance obligation. When product rules change, review the relevant assertions and their scope. Record why the change is allowed. Do not turn an outdated rule into an obstacle that everyone learns to bypass.
-
-Look for evidence that the check catches an actual mistake, makes a review easier, or allows a replacement to be assessed with less manual reconstruction. If failures routinely demand edits to expected values without discussion of behavior, the check may be a snapshot of implementation details wearing a stronger name.
-
-[Scenario builders](./scenario-builders.md) make the input space easier to explore. [Differential verification](./differential-verification.md) can reveal where a replacement changes behavior. The invariants then help decide which differences are defects and which are corrections.
+In practice, invariants rarely live alone: [scenario builders](./scenario-builders.md) make it cheap to feed them varied states, and when [differential verification](./differential-verification.md) turns up a mismatch during a rewrite, your invariants help decide which implementation is actually right.

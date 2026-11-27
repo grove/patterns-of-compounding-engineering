@@ -1,68 +1,66 @@
 # Persistent reproducer
 
-*Keep the conditions that made a failure possible.*
+*Keep the conditions that triggered a hard bug, not just the fix.*
 
-Consider a subscription service that occasionally applies the same payment twice. A developer spends an afternoon reconstructing the sequence: the provider sent an event, the handler updated the balance, the response was lost, and the provider tried again. The fix is small. The investigation was most of the work.
+A subscription service occasionally applies the same payment twice. Somebody spends an afternoon piecing together what happened: the payment provider sent a webhook, the handler updated the balance, the HTTP response dropped on the wire, and the provider retried. The actual fix is five lines. The investigation was the whole afternoon.
 
-If the pull request contains only the fix, the next developer inherits the conclusion without the means to check it. A sentence in an incident report helps, but it still leaves someone to reconstruct the setup. Preserve an executable version of the failure while those details are fresh.
+If the pull request only ships those five lines, the next engineer inherits the conclusion with no way to test it. A paragraph in a postmortem helps, until six months later when someone touches the handler and has to reconstruct the whole setup from scratch. While the details are fresh, keep an executable version of the failure.
 
-The subscription service in this guide is an illustrative example. Duplicate delivery is a real integration concern: [Stripe documents both duplicate events and delivery without a guaranteed order](https://docs.stripe.com/webhooks#event-delivery-behaviors). Your reproducer needs to exercise the behavior of your own handler, including the assumptions it makes about those deliveries.
+Duplicate webhook delivery is a real integration hazard ([Stripe documents both duplicate and out-of-order event delivery](https://docs.stripe.com/webhooks#event-delivery-behaviors)). The point of a reproducer is to put your own handler through those exact conditions, with all its real assumptions exposed.
 
-## Keep a small, complete case
+## Keep one small, self-contained case
 
-A useful reproducer contains four things: the starting state, the actions that trigger the failure, the result you expect, and a command that checks it. Include a short explanation of why that result is correct. Without the explanation, an inconvenient assertion can look like something to update when the implementation changes.
+A good reproducer packs four things together: the starting state, the sequence of events that triggers the bug, the outcome you expect, and a single command to check it. Add a two-line comment explaining *why* that outcome is right. Without the why, a failing test six months later looks like a stale assertion someone can casually update to make CI green.
 
-For the payment example, begin with one unpaid invoice and two deliveries of the same successful payment event. Check the amount recorded as paid and the number of applied events. A check that merely counts HTTP responses could pass while the account is still wrong.
+In the billing example, you start with an unpaid 2,400-unit invoice and deliver the same `evt_001` payment event twice. Then you check both the paid total and the count of applied events. Checking only HTTP 200 responses lets the test pass while the customer's balance is quietly doubled.
 
-The [billing lab](../examples/README.md) includes a small version of this case. From the repository root, run:
+You can try a tiny version in the [billing lab](../examples/README.md) from the repository root:
 
 ```sh
 python3 examples/billing_lab.py replay --implementation buggy
 python3 examples/billing_lab.py replay --implementation fixed
 ```
 
-The invoice amount is 2,400 minor units. Both deliveries carry event ID `evt_001`. The buggy implementation records 4,800 as paid and applies two events; the corrected one records 2,400 and applies one. The first command deliberately exits with status 1. The second runs the same scenario successfully against the corrected implementation. The data and expectation stay the same; only the implementation changes. Keep that distinction visible in a real incident fix too.
+The buggy run records 4,800 as paid across two applied events and exits with status 1. The fixed run keeps the exact same input and expectation, records 2,400 across one applied event, and exits 0. Holding the scenario fixed while swapping only the implementation is the habit you want in real bug fixes too.
 
-The lab models sequential delivery in memory. It does not establish that a production handler survives concurrent requests, process crashes, or a database transaction that commits just before its acknowledgement is lost. Those are separate cases to reproduce when they matter.
+Be honest about what a reproducer does *not* cover. This lab runs sequentially in memory. It says nothing about two concurrent workers racing on the same webhook, a process crashing right after commit, or a lost database acknowledgement. If one of those is the actual failure mode, reproduce that instead.
 
-## Capture the cause, then remove the clutter
+## Preserve the cause, then strip the noise
 
-Start with whatever reproduces the failure reliably. That might be a script, a failing integration test, or a recorded sequence of commands. Reduce it after it works. Trying to design the ideal fixture before understanding the bug can slow the investigation considerably.
+Start with whatever actually reproduces the bug, even if it's an ugly script or a bulky integration test. Trying to design the cleanest possible fixture before you understand the failure just drags out the investigation.
 
-Remove accounts, fields and actions one at a time, rerunning the old implementation after each removal. Stop reducing when another deletion would hide the cause or make the example harder to understand. The shortest possible input is not always the best explanation.
+Once it fails reliably, trim it down. Remove accounts, fields, and intermediate steps one at a time, rerunning against the broken code after each cut. Stop when the next cut obscures the *cause* of the bug. A reproducer that merely repeats a surface symptom (say, a canned error code) without recreating the underlying mechanism won't catch the bug when it comes back in slightly different clothes. Minimal is good; inscrutable is not.
 
-Check the case against a known failing revision before accepting it as regression coverage. A passing test added after the fix may never have exercised the defect. If running the old revision is impractical, temporarily restore the specific defect in an isolated checkout and check that the assertion catches it. Record any remaining gap rather than treating a successful run as proof.
+Always verify that your reproducer actually fails on the unfixed code before merging it. A regression test written *after* the fix often passes without ever hitting the buggy branch. If checking out the old commit is too painful, temporarily re-introduce the bug in a local copy and watch the assertion catch it. And make sure the failure message names the domain problem ("payment applied twice") instead of burying the reader in a fixture setup stack trace.
 
-A useful failure message names the observation: the same payment affected the balance twice. A stack trace from fixture setup is evidence that the case did not run.
+## Pin down everything that drifts
 
-## Control the parts that would change tomorrow
+Give the reproducer its own isolated state. Swap live payment APIs for a local stub that records attempted calls. Replace production payloads with synthetic IDs and amounts that keep the structural relationships intact (like the repeated `evt_001`). Copying raw production JSON usually drags in sensitive customer data and fifty fields the bug doesn't care about.
 
-Give the case its own state. Replace live payment calls with a local boundary that can record attempted effects. Use synthetic identifiers and amounts while preserving relationships that matter, such as the repeated event ID. Copying an entire production payload usually preserves more sensitive and irrelevant material than the test needs.
+Pin the clock whenever deadlines or billing periods matter, including the timezone. Pin random seeds when randomness is involved, while remembering that a seed won't make an uncontrolled thread schedule deterministic.
 
-Supply the clock when the failure depends on a deadline. Record the timezone and the relevant instant explicitly. Supply random inputs or a seed when randomness matters. A seed alone cannot reproduce an uncontrolled thread schedule or a response from a live service.
+If the bug is a race condition, put a controllable barrier at the contested step so both workers meet there reliably; `time.sleep(0.5)` turns a reproducer into a flake that depends on CI load. If the bug is a crash mid-flight, capture the durable state before and after the interruption and replay the retry explicitly. Only add that extra plumbing when the bug actually demands it.
 
-For a race, introduce a controllable pause at the contested operation and drive both workers to it. Sleeping for an arbitrary duration leaves the test dependent on machine load. For a crash, retain the durable state before and after the interruption and define which operation is retried. These additions belong only where the failure requires them.
+[Hypothesis's guide to flaky failures](https://hypothesis.readthedocs.io/en/latest/tutorial/flaky.html) is a useful reminder of how leftover state, ambient clocks, and unseeded randomness break repeatability. The bar is simple: does the reproducer behave the same way tomorrow, and after twenty other tests ran ahead of it?
 
-[Hypothesis's discussion of flaky failures](https://hypothesis.readthedocs.io/en/latest/tutorial/flaky.html) gives concrete examples of the trouble caused by leftover state and uncontrolled randomness. The practical question is whether another run sees the same relevant conditions, including when it follows other tests.
+## Put it where people will actually run it
 
-## Put it where it will be used
+Most reproducers belong right inside the existing test suite. Name the test after the failure mode, link the incident or issue number, and leave the rationale next to the assertion. Nobody remembers to run a separate `reproducers/` folder hidden off to the side.
 
-For an ordinary regression, the existing test suite is usually the right home. Name the test after the behavior, link the incident or issue, and leave the reason beside the assertion. There is little value in creating a parallel catalogue that engineers must remember to run.
+Some failures genuinely need a slower environment or multiple processes. Keep those close to the code with one documented command and run them on an appropriate trigger: changes to that component, a nightly job, or a release check. A twenty-minute multi-process replay shouldn't block a typo fix in a README.
 
-Some failures need a slower environment or several processes. Keep those cases close to the code, with one documented command and their prerequisites. Choose a sensible trigger: a relevant component change, a nightly run, or a release rehearsal. A twenty-minute reproduction need not delay every documentation edit.
+If a property-based test discovers a nasty failure, promote it into an explicit regression case. [Hypothesis recommends pinning must-keep cases with `@example`](https://hypothesis.readthedocs.io/en/latest/tutorial/replaying-failures.html), because its local example database can be invalidated across versions or test edits.
 
-Property-based tools can preserve failures automatically, but their caches are not a permanent specification. [Hypothesis recommends an explicit `@example` for an input that must always run](https://hypothesis.readthedocs.io/en/latest/tutorial/replaying-failures.html), because its stored examples can be invalidated by changes to tests or versions. Keep the meaningful case in a form the team can review.
+## Know what is worth keeping
 
-## Decide what is worth maintaining
+Keep a reproducer when reconstructing the setup took real work, the bug could easily return, or the case will help check a future rewrite. A trivial typo that a five-line unit test already covers doesn't need a replay harness.
 
-This pattern is particularly useful when creating the conditions was expensive, the failure can recur, or the case will help evaluate a replacement. A simple typo already covered by a focused test does not need an additional replay package.
+Every saved case carries upkeep. Dependencies move, schemas shift, and product rules change. Give each reproducer a clear owner (normally the team that owns the behavior). When a rule changes, update the explanation alongside the assertion, and delete redundant cases once a stronger invariant or clearer test covers the same ground.
 
-Every retained scenario has a cost. Dependency upgrades may break it; changed product rules may invalidate its expectation. Give it an owner through the component that owns the behavior. When the rule changes, update the explanation as well as the result. If a broader test now covers the same failure clearly, delete the redundant machinery.
+Watch out for replay suites that only work on the author's laptop. Have someone who wasn't part of the incident run the command and explain what the assertion protects. Their confusion will tell you exactly what's still missing.
 
-Be suspicious of a replay archive that nobody can run without its author. Ask someone outside the investigation to execute the command and explain the assertion. Use their questions to improve the instructions and setup.
+## Where it leads next
 
-## What later work gets easier?
+The immediate win is small and practical: the next person can replay this bug without spending another afternoon rebuilding it. Don't judge success by how many reproducers you collect; judge it by whether setup stayed cheap and later changes actually used them.
 
-The first return is modest: another engineer can reproduce this failure without repeating the investigation. Note how long setup takes and whether a later change actually reuses the case. Counting retained scenarios says little about their value.
-
-Several cases may reveal reusable ways to create accounts or drive events. Extract those into [scenario builders](./scenario-builders.md) when the repetition becomes visible. A repeated cause may suggest an [executable invariant](./executable-invariants.md) that checks many more cases. The same scenario can then become input to [differential verification](./differential-verification.md) during a replacement. Each step should earn its upkeep through a real use.
+Once two or three reproducers repeat the same painful setup, pull the shared parts into [scenario builders](./scenario-builders.md). If the same class of bug keeps showing up, generalize the check into an [executable invariant](./executable-invariants.md). And when it's time to replace that legacy module, your saved reproducers become the starting corpus for [differential verification](./differential-verification.md). Let real pain pull you into the next step rather than building all of it upfront.

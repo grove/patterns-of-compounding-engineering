@@ -1,97 +1,89 @@
 # Competing prototypes
 
-*Use the same awkward cases to put two plausible designs to work.*
+*Stop debating two designs on a whiteboard; run both against the same awkward cases.*
 
-A team has spent two design meetings discussing whether billing rules belong in ordinary application code or a configurable rule engine. Each approach has an advocate. The diagrams are getting more detailed, but nobody has tried adding the next rule to either design.
+A team burns two design meetings arguing over whether billing rules belong in plain application functions or a data-driven rule engine. Both sides have eloquent advocates and increasingly ornate diagrams, and nobody has actually tried adding the next pricing rule to either design.
 
-This is a good time for competing prototypes. Choose a question that could change the decision, build the smallest credible versions of two alternatives, and evaluate them against the same cases. Keep the evidence that another engineer could use to revisit the choice.
+Build the smallest believable version of each option, put them both through the exact same uncomfortable cases, and keep the evidence so someone can revisit the decision later without starting the argument from zero.
 
-Use this pattern when there are plausible alternatives and an unresolved question that running code can answer. Skip it when a contract already determines the implementation, the change is easy to reverse, or the uncertainty concerns what customers need. Two technical prototypes will not tell you whether anyone wants the feature.
+Save this for genuine forks where running code can settle the question. Skip it when an external contract forces your hand, when the choice is trivial to reverse later, or when the real unknown is whether customers want the feature at all. Two technical prototypes won't answer a product question.
 
-## Choose the question before the designs
+## Frame the question before writing code
 
-“Which architecture is better?” is too broad. A useful question names the work the design must support:
+"Which architecture is cleaner?" leads nowhere. Ask questions tied to work the team actually has to live with:
 
-- Can we add a backdated plan change without changing how historical invoices are explained?
-- Can the implementation reject contradictory rules at configuration time?
-- Can someone unfamiliar with the code find the rule responsible for a disputed charge?
+- Can we add a backdated plan change without breaking how historical invoices are explained?
+- Can the system catch contradictory rules before they hit production?
+- Can an engineer who didn't write this trace a disputed charge back to the rule that caused it?
 
-The last question needs a person trying the task. Passing a test suite cannot answer it.
+Passing tests can't answer that third question; someone unfamiliar with the code has to sit down and try to read it.
 
-For the fictional subscription service used in this guide, suppose the immediate request is a new discount with an effective date. The team expects further pricing changes but has no evidence that business staff need to configure rules themselves. That distinction matters. A configuration interface brings work that may be irrelevant to the current decision.
+In our billing example, say the immediate ask is an effective-dated discount. The team expects more pricing tweaks later, but nobody in finance has asked to edit rules without a deploy. That scopes the experiment immediately: a rule-authoring UI is out of bounds for today's decision.
 
-Write a short brief before building. This is an illustrative brief for that service:
+Write a half-page brief before starting:
 
 ```text
 Decision: keep explicit pricing functions or introduce a rule table
 Question: which makes an effective-dated discount easier to add and explain?
 
 Candidates:
-  A. A small refactor of the current pricing functions
-  B. Rules stored as data, evaluated by a separate function
+  A. Small refactor of the existing pricing functions
+  B. Rules stored as data, evaluated by a generic runner
 
-Shared evidence:
-  Existing invoice cases, including credits and a backdated change
-  One new discount applied before, on and after its effective date
-  An explanation identifying the rule behind each invoice line
+Shared cases:
+  Existing invoice corpus (including credits and a backdated change)
+  One new discount checked before, on, and after its effective date
+  An explanation naming which rule produced each invoice line
 
-Budget: one working day for the comparison
-Excluded: configuration UI, production rollout, migration of old invoices
-Stop when: the hard cases expose a relevant difference, or time runs out
+Timebox: one day
+Out of scope: config UI, production rollout, migrating old invoices
+Stop when: the hard cases expose a clear difference, or the day ends
 ```
 
-That budget is a choice for this example. A decision affecting several services may justify more work; choosing a helper library may justify less.
+Scale the timebox to the stakes: an afternoon for picking a helper library, a few days for a cross-service boundary.
 
-## Give the alternatives a fair test
+## Run a fair comparison
 
-Use a shared boundary: the same account state, proposed change and effective time go in; invoice lines and their explanations come out. Use integer minor units for amounts and explicit dates. Keep network calls and writes outside the comparison.
+Give both prototypes the same interface: account state, proposed change, and effective date go in; invoice lines and explanations come out. Keep network calls, database writes, and ambient clocks outside the comparison.
 
-Start with cases whose expected behavior the team understands. Include one uncomfortable case from a real investigation if you have permission to turn it into synthetic test data. A tidy set of ordinary invoices will flatter both designs.
+Feed both designs cases that actually hurt. Include at least one ugly synthetic case drawn from a real past incident; clean happy-path invoices make almost any architecture look good. Run the current production implementation alongside them if it's relevant, while checking both candidates against your [executable invariants](./executable-invariants.md) so neither inherits an old bug unchallenged.
 
-Run the current implementation as a reference where it is relevant. Differences need explanation: an existing result may be wrong, and matching it is not sufficient evidence of correctness. The checks in [Executable invariants](./executable-invariants.md) help establish which obligations both candidates must meet.
+Then try making the *next* change in both prototypes and pay attention to where the friction lands. Did the rule table suddenly need a precedence mechanism to resolve overlapping discounts? Did the explicit functions make it ugly to generate a line-by-line explanation?
 
-Then make the proposed change in both implementations. Inspect the work it actually requires. Did the rule table need a new exception to its evaluator? Did the explicit functions make it difficult to explain which discount won? Can either representation describe the effective date without hiding it in a default?
+Watch out for two traps that skew short spikes. First, people naturally polish the option they already favor, and someone who already knows the existing codebase will always move faster in it. Note uneven familiarity honestly rather than mistaking it for long-term cost. Second, **short prototypes flatter designs with low upfront cost over designs with better long-term economics.** A quick hack almost always wins a one-day race against a cleaner model unless you deliberately test a realistic follow-up change (like adding a second overlapping rule or debugging an unexpected output).
 
-Avoid spending the whole budget polishing the favored option. Record uneven familiarity and unfinished work. If one person knows the existing approach well and is learning the alternative, the first attempt measures that difference too. It can still reveal useful constraints, but it does not establish the alternative's long-term cost.
+## Keep "do less" on the table
 
-## Include the option of doing less
+Sometimes the comparison points to a smaller move than either camp expected. Maybe the rule table handles the new discount cleanly but immediately needs priority ordering and conflict validation, while plain functions stay local, readable, and easy for support to trace.
 
-Sometimes the comparison exposes a smaller decision. In this fictional case, imagine the rule table handles the new discount neatly but needs evaluation priorities to resolve overlapping discounts. The explicit functions are less general, yet the next rule requires only a localized change and produces an explanation the support team can follow.
+Choosing plain functions doesn't prove rule engines are bad; it proves you don't need one until rule count or non-engineering authoring actually justifies the extra complexity. Keep the overlap cases you discovered so you have them ready if that day comes. And whenever "handle it manually for now" is a real option, include it honestly along with the operational work and error risk it dumps on whoever has to run it.
 
-The team can choose the smaller change and retain the cases about overlap. It has learned something specific: configuration will become more attractive if rules are numerous enough to justify validation and priority management. It has not demonstrated that rule engines are bad.
+## Leave a decision trail, not two live codebases
 
-Also consider whether the offer could be handled through an existing adjustment process while demand becomes clearer. Include the work and errors this would create for the people using that process. “Do nothing” is rarely free, but it belongs in the comparison when it is a credible option.
-
-## Keep an experiment that can be understood later
-
-Retain the input cases, expected results, source revision, run instructions and a short decision note. Record the limits beside the result:
+Save the shared test cases, expected outputs, commit hashes, run commands, and a short note explaining the call and what would flip it:
 
 ```text
 Chosen: explicit pricing functions for the effective-dated discount
-Reason: the required change stayed local; invoice explanations remained clear
+Why: changes stayed local and invoice explanations were easy to follow
 
-Unresolved: editing rules without deployment; large rule sets
-Revisit if: people outside engineering need to maintain pricing rules
-Evidence: shared cases, both implementations, notes from the explanation task
-Status: experiment only; neither implementation is a supported billing API
+Unresolved: non-engineer editing, large overlapping rule sets
+Revisit if: business staff need to author pricing rules directly
+Evidence: shared corpus, both prototypes, notes from the trace exercise
+Status: experiment only; neither prototype is a supported API
 ```
 
-In your repository, link the decision note to the commits and commands that support it.
+Keep prototype code clearly separated from production code. If keeping both prototypes runnable as dependencies move is expensive, preserve the commit references, test cases, and decision note instead of promising to maintain dead spikes forever.
 
-Keep the experiment separate from supported production code. Someone should be able to tell whether it still runs, what environment it needs, and whether a changed dependency invalidates the result. If maintaining both prototypes would be expensive, preserve the relevant source revision and the evidence instead of promising that both remain runnable forever.
+Simon Willison's [Hoard things you know how to do](https://simonwillison.net/guides/agentic-engineering-patterns/hoard-things-you-know-how-to-do/) makes a great case for keeping working small experiments around to combine later. On a team, the crucial addition is a clear label on each experiment: what it proved, under what assumptions, and what it deliberately left untouched.
 
-Simon Willison describes collecting working demonstrations and later combining them into new work in [Hoard things you know how to do](https://simonwillison.net/guides/agentic-engineering-patterns/hoard-things-you-know-how-to-do/). For a team, the useful addition is a boundary around each demonstration: what it established, under which conditions, and what it left unanswered.
+## Know when to stop
 
-## Know what the result can support
+A prototype can expose an awkward data model or a missing input; it won't prove production scalability or failure recovery just because the happy path ran. If load or migration safety is the real deciding factor, include the smallest credible test of that concern before choosing, or mark it unresolved and budget for it explicitly.
 
-A prototype can expose a missing input or an awkward rule representation. It cannot demonstrate production reliability simply because the happy path ran. If the decision depends on migration, load or failure recovery, include the smallest credible exercise of that concern before choosing. Otherwise mark it unresolved and budget for it.
-
-Stop when further work is unlikely to change the choice. A third prototype needs a specific question that the first two left open. Check that the alternatives differ in the assumption being examined; changing the implementation language alone may teach you very little about the design.
-
-The retained cases may later support [Differential verification](./differential-verification.md), and the discarded approach may answer a future feasibility question. Count that as a benefit when it happens. Until then, the experiment has earned its keep if it improved this decision at an acceptable cost.
+Stop once extra work stops changing the decision. You rarely need a third prototype unless the first two uncovered a brand-new question neither can answer. Even the discarded prototype earns its keep if the shared cases later feed [differential verification](./differential-verification.md) or save someone from re-running the same debate next year.
 
 ## Sources and related patterns
 
-- Ryan Singer's [Find the Elements](https://basecamp.com/shapeup/1.3-chapter-04), in *Shape Up*, describes exploring alternative flows at a deliberately limited level of detail. It is a useful companion when code would make the exploration slower.
-- Martin Fowler's [Sacrificial Architecture](https://martinfowler.com/bliki/SacrificialArchitecture.html) explains why useful software can be deliberately temporary, while still needing care in its internal structure.
-- [Investment retrospective](./investment-retrospective.md) provides a way to revisit the cost of maintaining experiments after the original decision.
+- Ryan Singer, [Find the Elements](https://basecamp.com/shapeup/1.3-chapter-04) (*Shape Up*): sketching alternative approaches at low fidelity when writing code too early slows exploration down.
+- Martin Fowler, [Sacrificial Architecture](https://martinfowler.com/bliki/SacrificialArchitecture.html): why deliberately temporary software still needs enough internal clarity to teach you something real.
+- [Investment retrospective](./investment-retrospective.md): checking whether kept experiments and spikes are still worth maintaining after the original decision.

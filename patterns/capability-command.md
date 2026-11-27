@@ -1,44 +1,48 @@
 # Capability command
 
-*Make a useful engineering task safe and repeatable for its next user.*
+*Package a tricky engineering task so someone else can run it safely and understand what it tells them.*
 
-Someone on the team knows how to reproduce a failed payment. They know which seed script to run, which date to substitute, which queue to clear and which environment variable must be unset. The procedure works while that person is available. A second engineer attempting it alone has several opportunities to get a plausible but irrelevant result.
+Every team has at least one person who knows how to reproduce the ugly payment bug. They know which seed script to run, which date to override, which queue to flush, and which environment variable will quietly break everything if you forget to unset it. That works fine right up until they're on vacation, or a second engineer tries it alone and gets a plausible-looking result that actually tested nothing.
 
-Package that procedure as a command with explicit inputs, a known environment and an outcome people can interpret. Begin with one task that is already useful. The command should remove setup decisions the next person would otherwise have to rediscover.
+A capability command turns that tribal ritual into a single entry point with explicit inputs, an isolated environment, and output a human can read. Start with one task people already run.
+
+## First, check if you can kill the task instead
+
+Before wrapping a recurring manual procedure in a slick CLI, ask why it keeps happening. If engineers run a data-repair script every Monday because a webhook retry isn't idempotent, packaging the repair script makes the symptom cheaper to live with, while fixing the retry eliminates the chore entirely.
+
+Wrap tasks that genuinely remain part of the work: reproducing edge cases, rehearsing migrations, verifying invariants, comparing candidate implementations. Don't build nicer ergonomics around a bug you should just fix.
 
 ## A small example you can run
 
-From the root of this repository, run the supplied [billing lab](../examples/billing_lab.py):
+From the repository root, run the [billing lab](../examples/billing_lab.py):
 
 ```sh
 python3 examples/billing_lab.py replay --implementation fixed
 ```
 
-The fictional scenario delivers the same payment event twice against an invoice for 2,400 minor units. The fixed implementation applies one event and records 2,400 as paid. Change the implementation to see the original failure:
+This runs a synthetic scenario where the same 2,400-unit payment event arrives twice. The fixed handler applies it once and exits 0. Now run the broken version:
 
 ```sh
 python3 examples/billing_lab.py replay --implementation buggy
 ```
 
-The buggy version applies both deliveries, records 4,800 as paid and exits unsuccessfully. That failure is expected: it demonstrates that the scenario can distinguish the implementations. Both runs use in-memory synthetic state. They do not contact a payment service, read production data or prove that a real concurrent service handles duplicate delivery correctly.
+The buggy version applies both deliveries, records 4,800 as paid, and exits 1. That non-zero exit is intentional: it proves the command can actually catch the failure. Both runs stay in memory on synthetic data; they don't touch a real payment gateway or prove anything about concurrent workers in production.
 
-The [example instructions](../examples/README.md) describe the other commands. A reader can start with a concrete question and obtain a repeatable result without learning the internal test runner first.
+The [example instructions](../examples/README.md) list the other subcommands. The point is that a newcomer can ask a concrete question ("does this handler survive duplicate delivery?") and get a repeatable answer without first learning the internal test harness.
 
-## Define the contract before shortening the command
+## Nail down the contract before polishing the UX
 
-A short command is only useful if its meaning is stable. Decide what it takes as input, what it changes, what it reports and how it fails. Put these decisions in its help text and a brief repository entry.
+Short commands are nice, but predictable behavior matters more. Decide what the command takes in, what state it touches, what it prints, and how it signals failure, then put that right in `--help`.
 
-For a replay command, specify the source of the scenario, how the clock is set and whether it can send external requests. For a migration rehearsal, specify the source and lifetime of its database. For a benchmark, record the workload and the conditions needed to compare runs.
+For a replay command, spell out where the scenario comes from, how the clock is set, and that no outbound requests leave the machine. For a migration rehearsal, state where the database lives and when it gets torn down. For a benchmark, record the workload and conditions needed to compare two runs.
 
-Use a command-line parser to reject unknown flags and invalid values. Python's [argparse](https://docs.python.org/3.12/library/argparse.html) generates help and normally reports invalid arguments with exit status 2. Keep an unsuccessful verification distinct from successful execution in the command's exit status, and explain the difference in its output.
+Use a real argument parser that fails loudly on typos and unknown flags. Python's [argparse](https://docs.python.org/3.12/library/argparse.html) generates help text and exits with status 2 on bad arguments. And never return exit code 0 when a verification fails just because the script finished without crashing; CI needs to distinguish "ran cleanly and passed" from "ran cleanly and found a bug."
 
-For example, a replay can complete normally while establishing that the candidate applied a payment twice. Returning success because the script reached its last line would make it unsuitable for CI.
+## Own the environment you spin up
 
-## Own the environment you create
+An in-memory script sidesteps cleanup. Real tools usually need a database, temp files, or a local queue. Give every run its own scratch space and clean it up even when the check fails.
 
-The in-memory lab avoids most cleanup problems. A real application may need a database, files or a queue. Give each invocation its own resources and arrange cleanup even when the verification fails.
-
-For a file-based exercise, Python's [TemporaryDirectory](https://docs.python.org/3.12/library/tempfile.html#tempfile.TemporaryDirectory) provides a directory with cleanup on context exit. The following sketch shows how a command might isolate a database-backed replay; the two domain functions are application-specific, not functions supplied by the billing lab:
+For file-backed work, Python's [TemporaryDirectory](https://docs.python.org/3.12/library/tempfile.html#tempfile.TemporaryDirectory) cleans up on exit. Here's a rough sketch of how an isolated SQLite replay might look (the two domain calls are placeholders, not part of the billing lab):
 
 ```python
 from pathlib import Path
@@ -52,48 +56,44 @@ with TemporaryDirectory(prefix="billing-replay-") as workspace:
 raise SystemExit(0 if result.passed else 1)
 ```
 
-The domain functions must close their database connections before the temporary directory is removed. External resources need their own cleanup, including a way to recover leftovers after a killed process. A context manager cannot clean up after every possible termination.
+Make sure database connections close before the directory disappears, and remember that `SIGKILL` skips context-manager cleanup, so external containers or cloud resources need a way to reap leftovers.
 
-Pass the isolated resource explicitly to the application. Avoid a fallback that reads whichever database URL happens to exist in the shell. A development command should not acquire a production destination because its preferred local configuration was missing.
+Most importantly, pass the isolated target explicitly. Never let a dev command fall back to whatever `DATABASE_URL` happens to sit in someone's shell. Nobody wants a local replay script accidentally talking to staging or production because a flag was omitted.
 
-## Make failure useful
+## Make failure output diagnostic
 
-Report enough context to distinguish a failed assertion from a failed setup: the selected scenario, candidate, expected value and observed value. If the command could not construct its environment, say so before suggesting a product defect.
+When a run fails, tell the user whether the *product* broke or the *setup* broke. Print the scenario, the candidate, what was expected, and what actually happened. If the command couldn't even seed the database, say that instead of sending someone to hunt for a billing bug that doesn't exist.
 
-Avoid printing full records merely to make debugging easier. Choose the fields needed to understand the result. With synthetic data this is straightforward; a later extension to sanitized incident fixtures needs a deliberate review of what its output exposes.
+Resist dumping whole database records to stdout just because it's easy. Print the fields needed to diagnose the mismatch. With synthetic data that's harmless; the moment someone adapts the command to sanitized incident fixtures, verbose dumps become a data-leak risk.
 
-A command that leaves useful diagnostic artifacts should say where they are. If preserving those artifacts changes the cleanup contract, make that an explicit option. Do not retain every temporary database by default and leave developers to discover why their disk is full.
+If the command writes logs or snapshots on failure, print their exact path, and make retaining temporary databases an opt-in flag so developers don't wake up to a full disk.
 
-## Adopt one command at a time
+## Adopt one command, then watch a newcomer run it
 
-Choose a procedure that has already been repeated, or one whose next use is close enough to matter. Preserve the working script, remove assumptions about the author's machine and write down its dependencies. A task runner or package script is sufficient when the project already has one.
+Pick a procedure someone has already run twice, strip out the assumptions about their laptop, and wire it into whatever task runner the repo already uses (`Makefile`, `package.json`, `just`, a small Python script).
 
-Then ask someone unfamiliar with the task to run it from a fresh checkout. Watch where they pause. Missing credentials, an undocumented working directory and an ambiguous success message are defects in the command's interface. Fix those before adding a menu of related operations.
+Then sit next to someone who didn't write it and have them run it from a fresh checkout. Every pause is a bug in your interface: a missing env var, a wrong working directory, a cryptic "done" message that doesn't say what passed. Fix those rough edges before adding subcommands.
 
-Use the same entry point in CI when the environment permits it. A second implementation of the procedure in a workflow file can drift from what developers run locally.
+Run the exact same entry point in CI whenever you can. When CI reimplements the command in inline YAML, local runs and CI runs inevitably drift apart. GitHub's archived [Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all) is still a clean precedent for conventional, discoverable entry points (`script/setup`, `script/test`, and friends).
 
-GitHub's historical [Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all) gives a concrete precedent: conventional entry points for setup, tests and other development tasks across projects. The repository is archived, but the convention remains a useful example of making common work discoverable.
+## Keep the wrapper thin
 
-## Keep the abstraction small
+Every command you publish becomes an interface you have to maintain. Flags turn into contracts; wrappers around existing tools add another layer to debug when something breaks.
 
-There is a cost to supporting a command. Its flags become an interface. Its dependencies need updates. An obscure wrapper around a perfectly adequate existing tool may add another place to investigate when something fails.
+Keep one-off scripts as plain, documented scripts until repetition earns a real CLI. And if a task requires real judgment on every run, automate the setup and evidence gathering while keeping the decision in the open. A command that silently picks a migration strategy because the author liked that strategy last year hides the exact choice the next engineer needs to question.
 
-Keep one-off experiments as documented scripts until repetition justifies more. If the task requires substantial judgment on every run, automate preparation and evidence gathering while leaving the decision visible. A command that silently chooses a migration strategy because the author once made that choice hides the part a later engineer most needs to reconsider.
+Coding agents will call the same CLI a human does. Check what happens if an agent runs the command five times in a row or forgets an optional flag: isolation, cleanup, and clear failure output should hold either way.
 
-An agent can use the same interface as a person. Check what happens when an automated caller repeats the command or omits a flag: each invocation should retain the same isolation, cleanup and failure reporting.
+## Transfer understanding, too
 
-## Check whether the capability transferred
+A command makes *execution* transferable much more easily than it transfers *judgment*. If a new engineer can run `billing replay`, see green, and move on without knowing what the scenario tested (or what it skipped), you've built a black box rather than shared capability.
 
-Success means another engineer can complete the task, interpret its result and recover from a failure without its original author. Note the time spent on setup, requests for help and differences between local and CI results. Count the maintenance work too.
+Test transfer properly: ask someone else to run the command, predict what happens if they break one line of the handler, and explain the failure output in their own words. Their questions will show you where the output or docs are hiding the mental model.
 
-A reliable replay command can later serve a migration comparison or an onboarding exercise. That reuse is the practical return. If nobody uses the command and the underlying task disappears, remove it instead of preserving a growing catalogue of obsolete shortcuts.
-
-## Related patterns
-
-[Persistent reproducer](./persistent-reproducer.md) supplies a valuable first task. [Scenario builders](./scenario-builders.md) supply explicit starting states. [Differential verification](./differential-verification.md) can reuse the command's isolated setup to compare alternatives.
+When a command works, it tends to get reused in places you didn't plan: a [persistent reproducer](./persistent-reproducer.md) built on [scenario builders](./scenario-builders.md) becomes the harness for [differential verification](./differential-verification.md) or part of onboarding. When the underlying need goes away, delete the command rather than accumulating a museum of dead shortcuts.
 
 ## Sources
 
-- [GitHub: Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all). An archived, concrete example of shared command conventions for development work.
-- [Python: argparse](https://docs.python.org/3.12/library/argparse.html). Input validation, help generation and command-line errors.
-- [Python: tempfile](https://docs.python.org/3.12/library/tempfile.html#tempfile.TemporaryDirectory). Temporary resource ownership and normal context-manager cleanup.
+- [GitHub: Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all): an archived but still clear convention for discoverable project entry points.
+- [Python: argparse](https://docs.python.org/3.12/library/argparse.html): argument validation, generated help, and standard CLI error handling.
+- [Python: tempfile](https://docs.python.org/3.12/library/tempfile.html#tempfile.TemporaryDirectory): isolated temporary directories with automatic cleanup on normal exit.

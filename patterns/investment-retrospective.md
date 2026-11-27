@@ -1,85 +1,87 @@
 # Investment retrospective
 
-*Look at what happened when later work met the tool you built.*
+*Check what actually happened when later work met the tool you built.*
 
-A team spends several days building an invoice comparison tool. The first migration goes well. Months later, the tool is still in the repository, and someone repairs its fixtures whenever the invoice schema changes. It appears in presentations as an investment in engineering productivity. Nobody can readily name the last change it helped.
+A team spends four days building an invoice comparison runner. The first migration goes smoothly. Six months later the runner is still in the repo, someone has to patch its fixtures every time the invoice schema changes, and it still shows up on slide decks as a win for engineering productivity, even though nobody can remember the last PR it actually helped.
 
-An investment retrospective examines one such investment using subsequent work. What was it supposed to make easier? When did that work occur? What did people use, what did they work around, and what did upkeep cost? End with a decision about what to keep maintaining.
+An investment retrospective puts one of those retained tools back in front of real work. What was it supposed to make easier? When did that work happen next? What did engineers actually use, what did they route around, and what did upkeep cost? End with a concrete call: keep it, simplify it, fix one gap, or delete it.
 
-This proposed practice helps a team decide what remains worth maintaining. Use it for tools, checks, documentation or abstractions with a meaningful continuing cost. A useful five-line script does not need a quarterly business case.
+Save this for tools, checks, fixtures, or abstractions that carry ongoing upkeep. A five-line helper script doesn't need a review process.
 
-## Leave yourself something to compare
+## Leave yourself a baseline worth revisiting
 
-When starting an investment, record its intended benefit in terms of a recognizable task. “Improve confidence” is hard to revisit. “Compare old and new invoice totals without rebuilding the same fixtures” gives you somewhere to look.
+When you start building a capability, write down the job it's meant to help in plain terms. "Increase confidence" is impossible to audit six months later. "Compare old and new invoice totals without hand-building fixtures" gives you something real to look at.
 
-Keep a link to one or two recent examples of that task. Note where the effort went: acquiring data, constructing a scenario, running checks, interpreting mismatches, waiting for a specialist. Record rough ranges if that is all you know. Do not invent a precise baseline from a vague memory.
+Link one or two recent PRs or incidents where that pain showed up. Jot down roughly where the time went: pulling data, setting up state, running checks, sorting out mismatches, waiting on a domain expert. Rough ranges are fine; don't fabricate fake precision from memory.
 
-Choose a review trigger that gives the investment a chance to be used. For the fictional subscription service, that might be after the next few pricing changes or the next migration. Also choose a date at which to ask whether that work has occurred. If demand disappears, that is relevant to maintenance, even though it says little about how good the tool was.
+Pick a trigger that gives the tool a fair chance to prove itself, like the next three pricing changes, plus a fallback date in case that work never arrives. If nobody touches pricing for six months, that matters for upkeep even if the tool itself was well built.
 
-An illustrative note could be this short:
+A short note in the tracking issue is plenty:
 
 ```text
 Investment: invoice comparison runner
-Expected use: pricing changes that must preserve existing invoice results
-Current difficulty: engineers rebuild fixtures and inspect mismatches by hand
-Evidence to keep: relevant PRs, fixture repairs, cases the runner cannot handle
-Review trigger: three relevant changes, or the next planning review
-Possible decisions: keep, simplify, repair one gap, archive
+Expected use: pricing changes that must preserve existing invoice totals
+Current pain: rebuilding fixtures by hand and diffing mismatches manually
+Track: relevant PRs, fixture repairs, cases the runner can't handle
+Review after: three pricing changes, or next quarterly planning
+Options: keep, simplify, fix one gap, archive
 ```
 
-The number of changes is a chosen review budget, not a statistical sample size.
+"Three changes" is a review budget, not a statistical sample. It just makes sure you actually look back instead of forgetting.
 
-## Read the work, including the bypasses
+## Look at real work, especially the bypasses
 
-At review time, inspect a small set of actual changes. Include relevant work that did not use the investment. If you examine only successful runs, you will miss setup friction, gaps and situations where an engineer found a simpler route.
+When the trigger hits, pull up a handful of recent changes in that area, **including ones that didn't use the tool.** If you only look at successful runs, you'll miss setup friction, missing features, and the shortcuts people took to avoid dealing with your runner.
 
-For each change, ask the engineer who did it what happened. Compare their account with the PR, incident notes or command output. Separate time spent learning the domain from time spent operating the tool; both matter, but they suggest different repairs.
+Talk to the person who made each change and compare their memory with the PR, incident log, or CI output. Keep time spent learning the business domain separate from time spent fighting the tool; both are real, but they point to very different fixes.
 
-Here is an invented review of the billing runner. These are illustrative observations, not measured results from a real team:
+Here's a hypothetical review of our billing runner (invented observations, not real team metrics):
 
-| Later work | What the runner contributed | Work still needed |
+| Later change | What the runner did | What still hurt |
 | --- | --- | --- |
-| Effective-dated discount | Existing cases exposed an unintended change to old invoices | A domain expert resolved whether one difference was intended |
-| Credit calculation refactor | Fixtures were reused after updating the invoice adapter | The adapter change took longer than running the comparison |
-| Refund correction | The engineer bypassed the runner because refunds were unsupported | A separate reproducer was built for the failing sequence |
+| Effective-dated discount | Existing corpus caught an unintended change to old invoices | Needed a domain expert to judge whether one diff was a fix or a bug |
+| Credit calculation refactor | Reused the corpus after patching the invoice adapter | Updating the adapter took longer than running the comparison |
+| Refund correction | Bypassed completely; the runner doesn't support refunds | Engineer wrote a separate reproducer from scratch |
 
-That table supports several decisions. The invoice cases seem useful. The adapter may deserve simplification. The refund gap might be acceptable if the runner was never meant to cover refunds. Automatically expanding it would turn the review into another project proposal.
+You don't need a big presentation to read that table. The invoice cases are pulling their weight, the adapter is too brittle and should be simplified, and skipping refunds might be totally fine if the runner was never meant to cover them. Turning every missing feature into a roadmap item is how small helpers balloon into internal platforms.
 
-## Count upkeep and changed circumstances
+## Count the hidden upkeep and what changed around it
 
-Collect the cost of fixture repairs, dependency upgrades, confusing failures, onboarding and ownership. Include help provided informally by the tool's author. A command can look self-service because nobody records the private messages required to run it.
+Add up the real carrying cost: broken fixtures, dependency bumps, cryptic CI failures, onboarding questions, and the private Slack messages the original author answers to help people run it. Tools often look "self-service" on paper only because nobody logs the DMs.
 
-Separate the initial cost from future upkeep. The first matters when deciding whether to make similar investments again. The second matters when deciding whether this one should remain supported. Past effort does not make a tool worth keeping, and a disappointing initial return does not require deleting something that is now useful and cheap to maintain.
+Keep sunk cost separate from future upkeep. The four days you spent building it tell you whether similar investments are worth starting in the future; ongoing upkeep tells you whether *this* one is worth keeping. Sunk effort is never a reason to keep nursing a bad tool, and a painful first week isn't a reason to delete something that's now cheap and genuinely useful.
 
-Also ask what changed around it. Perhaps the team learned the billing domain, the migration became smaller, or a third-party tool acquired the needed feature. Perhaps the hardest changes were deliberately postponed. These differences make a simple before-and-after time comparison unreliable.
+Look at what changed outside the tool, too. Maybe the team understands billing better now, or the remaining migrations are tiny, or a library added the feature natively, or everyone simply postponed the hardest work. Any of those wrecks a naive before-and-after comparison. Google's [Eliminating Toil](https://sre.google/workbook/eliminating-toil/) chapter is good on this: price in the maintenance of automation, and always check whether the underlying chore can be designed away.
 
-Google's [Eliminating Toil](https://sre.google/workbook/eliminating-toil/) chapter discusses measurement and the cost of developing automation, as well as alternatives to automating a task. That is a useful discipline here: include the effort needed to keep the improvement working and consider whether the underlying task can disappear.
+## Look beyond raw runtime
 
-## Use several kinds of evidence
+Cutting a script from ten minutes to ten seconds doesn't help much if engineers still spend an afternoon arguing over what the output means. Combine effort with harder questions:
 
-A shorter run time matters when running the check was the bottleneck. It matters less when engineers still spend a day explaining its output. Combine observations about effort with evidence about the result:
+- Could someone besides the author run it and interpret the failure?
+- Did it catch a bug that mattered or verify a real guarantee?
+- Did a later piece of work reuse its inputs or structure?
+- Did it quietly push work onto another team or introduce a new way to break CI?
 
-- Could someone other than the author carry out the task?
-- Did the check find a consequential defect or help establish a required property?
-- Did a later change reuse the inputs or machinery?
-- Did the tool shift work to another team or add a new failure mode?
+A string of green runs only proves what's inside the check's scope; three quiet months don't prove a tool prevented incidents. On the flip side, a rarely used disaster-recovery command can still earn its keep if you rehearse it periodically; don't judge everything by invocation count.
 
-A clean run is useful evidence only within the checks' scope. Several quiet months do not show that the tool prevented incidents. Likewise, a rare recovery tool may remain worth keeping without frequent use; examine the need it covers and rehearse it instead of demanding a high run count.
+The [SPACE framework](https://www.microsoft.com/en-us/research/publication/the-space-of-developer-productivity-theres-more-to-it-than-you-think/) makes the broader point well: no single number captures developer productivity. Keep this review grounded in the specific work you were trying to improve, and never turn tool usage or time estimates into individual performance metrics.
 
-The [SPACE framework](https://www.microsoft.com/en-us/research/publication/the-space-of-developer-productivity-theres-more-to-it-than-you-think/) argues that developer productivity cannot be captured by one metric or dimension. Keep this review close to the tasks being improved. Do not turn command invocations, PR counts or individual time estimates into performance rankings.
+## Make a call, including deleting what failed
 
-## Make a maintenance decision
+Pick one small, finishable decision. For the billing runner above: keep the corpus, simplify the adapter, document that refunds live elsewhere, assign an owner, and check again on the next schema change. Don't spin up a "general billing test platform."
 
-Choose a change small enough to complete. For the illustrative billing review, keep the invoice cases and runner, simplify the adapter, and document that refunds need another approach. Assign the adapter repair to an owner and review it when the next relevant schema change occurs. There is no reason to commission a general billing test platform from this evidence.
+Just as often, the honest call is to retire something. Imagine a second hypothetical investment from the same billing service: a custom PR bot built to auto-generate test scenarios from OpenAPI diffs. After four schema changes, engineers spent more time deleting noisy generated fixtures than writing focused tests by hand, and two teams muted the bot. Rather than spending another sprint tuning heuristics, delete the bot, write down why it didn't stick, and free up the maintenance slot.
 
-Other reasonable outcomes include archiving an experiment, removing a redundant check, or keeping a tool unchanged until a known upcoming migration. If evidence is missing, name the next event that would supply it. “Collect more data” without a decision or stopping condition can become its own maintenance burden.
+Write a few sentences right next to the tool or in the issue: the changes you inspected, the main cost, the call you made, and what would trigger another look. Don't build a separate reporting system nobody reads.
 
-Record a few sentences beside the tool or its tracking issue. Include the changes examined, the main cost, the decision and what would make you revisit it. There is little value in creating a separate reporting system that nobody uses for the next decision.
+## Zoom out to the whole portfolio
 
-## Recognize a further return when it happens
+Reviewing one artifact at a time has a blind spot: ten tools that each look "worth it" in isolation can still add up to slow CI, fragile schema changes, and a repo newcomers are afraid to touch.
 
-Repeated use can repay an investment without producing any further capability. A stronger result appears when retained work makes another useful investment cheaper: the invoice cases become inputs to [Competing prototypes](./competing-prototypes.md), or the runner makes a risky replacement practical through [Differential verification](./differential-verification.md).
+Once or twice a year, list the retained helpers, custom linters, frozen baselines, and fixture suites in one place and look at their combined drag. If every ordinary feature PR now drags three separate harnesses along behind it, you're seeing negative compounding even if no single tool looks terrible on its own. Prune the weakest ones first using a [subtraction investigation](./subtraction-investigation.md) so you don't break a hidden consumer.
 
-Record which artifact was reused, what new work it enabled, and the cost of adapting it. The next review can then ask whether those new uses still justify the machinery they inherited.
+## Tell recurring savings apart from true compounding
 
-For tools whose upkeep exceeds their remaining value, use a [Subtraction investigation](./subtraction-investigation.md) to find their consumers and retire them deliberately.
+A tool that saves an hour every migration pays for itself, and that's plenty. True compounding shows up when retained work makes the *next* capability cheaper to build: the invoice corpus feeds [competing prototypes](./competing-prototypes.md), or the scenario setup makes [differential verification](./differential-verification.md) practical for a scary rewrite.
+
+When that happens, note what got reused, what it unlocked, and what adapting it cost. When it *doesn't* happen and maintenance starts growing faster than the benefit, retire it early while deletion is still cheap.

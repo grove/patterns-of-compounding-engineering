@@ -1,22 +1,22 @@
 # Scenario builders
 
-*Make important business states cheap to construct.*
+*Make awkward business states cheap to set up without hiding what matters.*
 
-An engineer wants to test a refund on an overdue subscription. Before reaching the refund, the test creates a customer, a plan, a subscription, an invoice, a failed payment and a credit. Much of the setup is copied from another test. Somewhere in that block is the detail the new test depends on.
+Suppose you need to test a refund on an overdue subscription. Before you even get to the refund, you have to create a customer, a plan, a subscription, an invoice, a failed payment, and a credit. Most of that setup gets copy-pasted from another test, and buried somewhere in those forty lines is the one field your new test actually depends on.
 
-The same work appears in bug investigations and demonstrations. Someone asks to see an account halfway through a plan change; a developer spends an hour clicking through a local application. A scenario builder gives that state a name and a reliable construction path.
+The exact same tax shows up during debugging and demos. Someone asks to see an account halfway through a plan change, and a developer burns an hour clicking through a local environment to reach that state. A scenario builder gives that business situation a clear name and a reliable way to construct it.
 
-Start when setup is repeatedly obscuring the behavior you are trying to examine. A few direct constructor calls are often clearer than introducing another abstraction.
+Wait until the setup boilerplate is actually getting in your way. For a simple test, two or three plain constructor calls are almost always clearer than a helper.
 
-## Name the situation you need
+## Name the situation, not the plumbing
 
-For the illustrative billing service used in this guide, useful situations include an unpaid invoice, a credit larger than the current invoice, and a payment delivered twice. These names describe things a developer can discuss with someone in support or finance.
+In our billing example, the situations engineers talk about with finance or support are things like an unpaid invoice, credit larger than the subtotal, or a duplicate payment event. Name your builders after those situations.
 
-The builder should make the relevant differences obvious. A test about excess credit ought to show the credit amount. A test about expiry ought to show the clock. Hide only the details that do not affect the question being asked.
+The rule of thumb is simple: hide the boring defaults, expose the difference the test is actually about. A test for excess credit should show the credit amount right at the call site. A test for subscription expiry should pass the clock explicitly.
 
-This is closely related to the [Object Mother pattern described by Martin Fowler](https://martinfowler.com/bliki/ObjectMother.html): a factory supplies familiar example objects instead of requiring each test to build them. Fowler also describes the coupling that arises when many tests rely on the same exact fixture data. Explicit overrides and small factories help keep that coupling visible.
+Martin Fowler wrote this up years ago as the [Object Mother pattern](https://martinfowler.com/bliki/ObjectMother.html): a factory hands out recognizable example objects instead of making every test assemble them from scratch. Fowler also warned about the trap: once dozens of tests depend on the exact same pre-baked fixture, changing one field breaks half the suite. Small factories with explicit overrides keep that coupling visible.
 
-Here is a standalone, simplified Python example. It illustrates the construction interface; it is not the API of the billing lab:
+Here's a minimal Python sketch showing the shape of the interface (separate from the billing lab's own functions):
 
 ```python
 from dataclasses import dataclass
@@ -39,48 +39,46 @@ case = invoice_case(
 )
 ```
 
-The case says that the invoice contains two units at 500 and requests 1,200 of credit. The test can then state the expected result independently: apply 1,000, leave nothing due, and retain 200 of unused credit if that is the chosen policy. The builder should not compute those expected values using the production calculator. That would make a shared mistake difficult to detect.
+One glance tells you the setup: two units at 500, requesting 1,200 of credit. The test then states the expected outcome itself (1,000 applied, 0 due, 200 unused) without calling the production calculator to compute the expected answer. If the builder calculates expected values with production code, a shared bug passes quietly.
 
-## Separate the description from its delivery
+## Split the description from how it's loaded
 
-For a calculation test, plain values may be enough. For an integration test, the same scenario may need database rows and queued events. For a browser demonstration, it may need an account that someone can sign into.
+A unit test for pricing math only needs plain data. An integration test needs database rows and queued events. A browser demo needs a real user account you can log into.
 
-Do not make every caller pay for the most expensive version. Keep a small description of the business state and introduce an adapter only when another environment actually needs it. A pure calculation should not start a database because the demonstration tool happens to use one.
+Don't force every caller to pay for the heaviest version. Keep the core description as plain values and add a persistence or HTTP adapter only when a test or demo actually needs it. Pure pricing logic shouldn't spin up Postgres just because the local demo script happens to seed one.
 
-Decide how faithfully construction must follow the application's normal path. Calling public application services exercises validation and avoids impossible combinations. Direct database setup can be much faster and may be appropriate when testing a read query. It also bypasses behavior that ordinary users rely on. A test built through that shortcut cannot establish that the real workflow creates the same state.
+Be deliberate about how faithfully you build state. Going through public application services runs real validation and blocks impossible combinations. Writing rows straight to the database is much faster (and totally fine for testing a read query), but it skips all the workflows real users hit. A shortcut setup can't prove the application itself can ever reach that state.
 
-Keep invalid states explicit. A corruption test may need an invoice with a missing account. Give that construction a name that exposes the inconsistency instead of letting the ordinary builder quietly create it.
+When you *do* need a broken state (say, an invoice pointing at a deleted account for a corruption test), give it an obvious name like `orphaned_invoice()` so nobody mistakes it for a normal fixture.
 
-## Keep each run independent
+## Keep runs isolated
 
-Every call should receive fresh mutable state. Returning the same account object to several tests lets one test alter the next test's starting point. Immutable descriptions help, but their adapters still need isolated rows, queues and files.
+Every call needs fresh state. Handing back a shared mutable object lets one test poison the next. Immutable case objects solve this in memory, and database adapters need their own isolation: unique IDs per test run and reliable cleanup, so parallel runs don't collide on hardcoded primary keys. Repeatability means the relationships stay the same, not that every test insists on owning `customer_id = 1`.
 
-For database scenarios, allocate identifiers within a test namespace and make cleanup part of the runner. If tests run concurrently, fixed primary keys can collide. Repeatability means preserving meaningful relationships and inputs; it does not require every concurrent run to write the same database key.
+Always pass the clock into time-sensitive builders. An `overdue_account()` helper that reads wall-clock time works today and flakes on the first of next month—or across a daylight-saving boundary. Pin the business date and timezone when they affect the rule, and keep incidental timestamps out of your assertions.
 
-Require an explicit clock for time-sensitive situations. A scenario called `overdue_account()` that uses today's date can change behavior next month or around a timezone boundary. Record the business date and the timezone when those affect the rule. Keep irrelevant timestamps out of assertions.
+The same goes for random test data. Randomization is great for exploration, as long as a failure prints the seed or inputs needed to replay it. [Hypothesis's notes on flaky failures](https://hypothesis.readthedocs.io/en/latest/tutorial/flaky.html) list the usual suspects: leftover state, unseeded randomness, and ambient clocks. If your builder leaks any of those, every test built on top of it becomes harder to trust.
 
-Be equally careful with random example data. Variety helps exploration, but a failing run must print enough information to reproduce its starting state. [Hypothesis documents leftover state, unmanaged randomness and external timing as common sources of flaky failures](https://hypothesis.readthedocs.io/en/latest/tutorial/flaky.html). A builder that depends on any of them makes every test using it harder to trust.
+## Extract from two real callers, not a wish list
 
-## Extract one repeated setup first
+Grab two existing tests or debugging scripts with nearly identical setup and pull out one factory for what they share. Migrate one caller at a time and check that the test still reads cleanly. If the factory immediately grows twelve boolean flags, those two cases probably weren't the same concept after all.
 
-Choose two existing tests or investigations with similar preparation. Write a factory for the shared state. Move one caller at a time and check that its behavior remains clear. If the factory needs a dozen flags immediately, the cases may not share a useful concept.
+Keep the unusual bits visible at the call site. `invoice_case(credit_minor=1200)` makes sense to a reviewer six months later; `special_customer(variant=7)` forces everyone to memorize a private cast of characters.
 
-Keep important setup visible at the call site. `invoice_case(credit_minor=1200)` tells a reviewer more than `special_customer(variant=7)`. Avoid a catalogue of opaque named customers whose significance lives in people's memories.
+An AI coding agent is decent at spotting copy-pasted test setup and refactoring callers onto a builder, but inspect the defaults it picks. Averaging together existing fixtures often freezes accidental assumptions (a hardcoded currency, a single timezone, an active plan) into every future test. Default values in a builder deserve the same scrutiny as defaults in production code.
 
-Add a short example beside the builder. Show a common case and one override. That is usually enough documentation to start. A command that creates a scenario for interactive inspection can come later, when someone needs that use rather than another test.
+## Watch for a second application and correlated blind spots
 
-An agent can help identify duplicated setup or move callers, but review the defaults closely. Automatically extracting the most common values may preserve accidental assumptions. The business meaning of a default deserves the same scrutiny as a default in production.
+Builders go sideways in two quiet ways.
 
-## Watch for a second application
+First, they can turn into a parallel implementation of your product. Once your account builder contains its own mini pricing engine, tax rules, and state machine, every product change means updating two systems. Prefer real domain operations whenever they're fast enough. When you must insert state directly, note what you bypassed and keep at least one integration test verifying that the normal workflow produces the same shape.
 
-A builder becomes expensive when it reimplements the workflow it is meant to support. If account setup includes a parallel pricing engine, tax calculator and state machine, every product change now has several implementations to update.
+Second, **shared builders create correlated blind spots.** Once the same builder feeds your [persistent reproducers](./persistent-reproducer.md), [executable invariants](./executable-invariants.md), [differential verification](./differential-verification.md), and [competing prototypes](./competing-prototypes.md), any assumption baked into its defaults quietly hides bugs from *all four*. If the builder always constructs single-currency invoices or always delivers events in order, every green check built on top of it shares that blind spot. Periodically ask what states the builder makes hard or impossible to construct; that's usually where the next production surprise lives.
 
-Prefer existing domain operations where their cost is acceptable. Where direct setup is necessary, document what it bypasses and keep a small integration check that an equivalent ordinary workflow produces the relevant state. There is no need to reproduce every production field merely because it exists.
+Retire scenarios when the product moves on. If legacy plans still exist in production, tag those builders with their policy version instead of silently updating them to current rules.
 
-Retire scenarios that no longer correspond to supported behavior. If legacy subscriptions remain in production, label them with the policy version they represent. Silently updating a legacy example to current rules removes the very distinction it was meant to preserve.
+## How to tell if it's helping
 
-## Look for reuse outside the original test
+Fewer lines of setup matter only if someone else can build the next weird case without copy-pasting a wall of fixtures or pinging the original author, and a code reviewer can immediately spot what makes the test case interesting.
 
-Measure whether a developer can construct the next awkward case without copying a large fixture or asking its author. Compare setup time for similar investigations. Notice whether reviewers can identify what makes a case unusual. Fewer setup lines are useful only if the remaining lines still explain the test.
-
-The builders may eventually support a [persistent reproducer](./persistent-reproducer.md), a demonstration for a domain expert, and a corpus for [differential verification](./differential-verification.md). The same inputs can also exercise [executable invariants](./executable-invariants.md) across variations that would otherwise be tedious to set up.
+When a builder works well, it stops being "just a test helper": the same scenario feeds a bug reproducer, a walkthrough with finance, a property check, and eventually a migration comparison. That reuse is where the payoff actually compounds. If updating the builder starts taking longer than the changes it supports, trim it back or review it in an [investment retrospective](./investment-retrospective.md).

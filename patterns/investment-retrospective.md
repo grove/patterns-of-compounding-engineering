@@ -79,10 +79,20 @@ Leave a few sentences next to the tool or in the issue: the changes you inspecte
 
 Auditing one artifact at a time has a real blind spot: ten tools, custom linters, and custom alerts that each look defensible alone can still add up to slow CI, brittle schema changes, noisy dashboards, and a repository newcomers are afraid to touch.
 
-Once or twice a year, list the retained helpers, custom lint rules, frozen baselines, custom metrics from [incident to instrument](./incident-to-instrument.md), and fixture suites in one place and look at their combined drag. When every ordinary feature pull request drags three separate harnesses along behind it, you are living with negative compounding even if no single tool looks awful by itself. Prune the weakest ones first using a [subtraction investigation](./subtraction-investigation.md) so you do not break a hidden consumer.
+Once or twice a year, list the retained helpers, custom lint rules, frozen baselines, custom metrics from [incident to instrument](./incident-to-instrument.md), and fixture suites in one place and look at their combined drag. An ordinary feature pull request may now drag three separate harnesses along behind it. If that burden keeps postponing repairs, the harnesses become more brittle and the next repair costs still more: that is negative compounding. High upkeep alone is enough reason to reconsider an investment; it does not establish a reinforcing cycle. Prune the weakest tools first using a [subtraction investigation](./subtraction-investigation.md) so you do not break a hidden consumer.
 
 ## Did it just save time, or did it unlock new work?
 
-A tool that saves an hour every migration pays for itself, and that is plenty. True compounding shows up when retained work makes something practical that used to be too slow or too risky: the invoice corpus feeds [competing prototypes](./competing-prototypes.md), or the scenario setup makes [differential verification](./differential-verification.md) feasible for a scary rewrite.
+A tool that saves an hour every migration can earn its keep through ordinary recurring returns. Compounding needs a further connection: retained work makes a later capability cheaper or more effective to build. The invoice corpus might supply [competing prototypes](./competing-prototypes.md), or its scenario setup might make [differential verification](./differential-verification.md) feasible for a difficult rewrite.
 
-When that happens, note what got reused, what it unlocked, and what adapting it cost. Feed those lessons back into how you choose your next bet: the upfront selection questions in [Using the guide](../guide.md#choosing-between-competing-investments) get much sharper once you have audited two or three real tools. When compounding never shows up and maintenance outruns the benefit, retire the tool early while deletion is still cheap.
+If that happens, append a short observation to the existing issue. Leave it unwritten until there is later work to inspect:
+
+```text
+Later capability: What was built or improved? Link the change.
+What we reused: Which earlier inputs, checks or knowledge did it use?
+Adaptation cost: What had to be learned, repaired or extended?
+Evidence and limits: What supports the claimed benefit? What remains an estimate?
+Decision: Keep, simplify, fix one gap or remove.
+```
+
+Reusing files shows a connection; it does not tell you how much cheaper the work became. Distinguish observed reuse and effort from an estimate of what starting fresh would have cost. Feed the finding into the selection questions in [Using the guide](../guide.md#choosing-between-competing-investments). Keep a useful tool even if it never compounds; remove it when its remaining benefit no longer justifies its upkeep.

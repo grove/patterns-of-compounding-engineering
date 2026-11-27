@@ -50,3 +50,7 @@ The two calculators share input validation. Their arithmetic is expressed differ
 - [Differential verification](../patterns/differential-verification.md): investigate differences before replacing an implementation.
 
 Run the lab's tests with `python3 -m unittest discover -s tests -p 'test_billing_lab.py' -v`. The tests treat the seeded failures as expected outcomes. They cover CLI defaults and exit codes, fixture validation and manually calculated boundaries.
+
+## Follow the same payment through later changes
+
+[One payment, five changes](./evolving-billing/README.md) takes the retained payment fixture through a restart, interrupted writes and a storage replacement. Predict the result, run the check, then see which earlier evidence can be reused. It ends by checking the replacement without the reference and exposing a requirement that every implementation still misses. The examples use temporary SQLite databases and remain entirely local.

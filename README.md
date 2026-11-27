@@ -10,6 +10,8 @@ The collection follows [Software that improves with age](https://grove.github.io
 
 Have a task open already? Start with [a small loop for everyday work](./guide.md#use-the-task-already-open), then [walk a duplicate-payment fix through it](./guide.md#walk-one-fix-through-the-loop). For a particular recurring problem, choose a pattern below.
 
+Working toward a larger change? See how the patterns can help you [replace a difficult subsystem](./guide.md#make-a-difficult-subsystem-replaceable), [reduce recurring review work](./guide.md#reduce-recurring-review-work), or [delegate one kind of task](./guide.md#delegate-one-kind-of-task). Each route explains when to stop adding machinery.
+
 ## Understand failures and check behavior
 
 1. **[Persistent reproducer](./patterns/persistent-reproducer.md)** — Keep the inputs and sequence that made a difficult failure understandable.
@@ -49,6 +51,8 @@ python3 examples/billing_lab.py compare
 ```
 
 The lab includes deliberately buggy implementations. Its documentation explains how to run them and why those commands should fail. It is a small teaching example, with no tax, currency conversion, durable storage or concurrent processing.
+
+The separate [evolving billing lab](./examples/evolving-billing/README.md) follows the same failure through restarts, interrupted writes and a replacement implementation. Try a prediction before each command, then inspect which earlier checks still help and which assumptions need revisiting.
 
 ## Build and check
 

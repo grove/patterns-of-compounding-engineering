@@ -26,7 +26,7 @@ The fix passes. The pull request is nearly ready. Your terminal still holds the 
 
 [Every's Compound Engineering guide](https://every.to/guides/compound-engineering) gives that decision a place in its plan, work, review, compound loop. The useful borrowing is the habit: finish a piece of work by improving how the next one starts. Here is a small version to try without adopting a new tool or process:
 
-1. **Recover the context.** Before changing code, find the current rule, a relevant past failure and the checks already available. State the expected behavior and any question the evidence cannot answer. A plan can fit in the issue; it needs enough detail to expose a wrong assumption.
+1. **Recover the context.** Before changing code, find the current rule, a relevant past failure and the checks already available. Could those checks make a simpler design or a useful experiment practical now? State the expected behavior and any question the evidence cannot answer. A plan can fit in the issue; it needs enough detail to expose a wrong assumption.
 2. **Make the change and check it.** Keep expected behavior anchored in a reviewed requirement or worked example. For a bug fix, watch the check fail on the broken behavior and pass on the correction. Review changes to the expectation as carefully as changes to the implementation.
 3. **Take a compounding pass.** Ask what made this task harder than it needed to be. Repair an existing check, retain a useful input, or put a missing explanation where the next person will look. Keep the smallest thing likely to help again. An ordinary fix may leave nothing extra worth maintaining.
 4. **Try the next use.** On the next related task, see whether someone finds and uses what you kept. A teammate or fresh agent session can rehearse this sooner. If you have to paste in the answer, discovery still needs work. [Verified retrieval](./patterns/verified-retrieval.md) shows how to check this without mistaking a convincing explanation for success.
@@ -52,7 +52,7 @@ Suppose the next change proposes adding another worker. Give a teammate or fresh
 
 The PR note can stay short: *Kept the duplicate-delivery case and its expectation. Linked it from the handler docs. Revisit when webhook processing gains another worker or persistent storage.* That sample note describes adapting the lab to an application; the lab itself remains a single-process teaching tool.
 
-If the next task is replacing the invoice calculator, the lab also offers `python3 examples/billing_lab.py verify` and `python3 examples/billing_lab.py compare`. Its [instructions](./examples/README.md) explain the deliberately broken candidate and the calculation rules. Pick the check that answers the task's question.
+To follow this same payment into the next change, try [One payment, five changes](./examples/evolving-billing/README.md). It carries the retained case through restarts, interrupted writes and a replacement, then exposes a requirement the stronger checks still miss.
 
 ## Give the method to the next investigator
 
@@ -64,23 +64,41 @@ If you keep having to interrupt a task, [Earned delegation](./patterns/earned-de
 
 ## Reuse is not compounding
 
-Keeping more scripts and tests does not automatically make a team faster. When you retain an engineering artifact, it usually ends up in one of four places:
+Keeping more scripts and tests does not automatically make a team faster. Look at what later work actually establishes:
 
 | Outcome | What it looks like |
 | --- | --- |
-| Accumulation | A pile of brittle regression tests that protects past fixes while dragging down every schema change |
+| Accumulation | A reproducer is available in the repository; nobody has needed it again yet |
 | Recurring return | A replay command that saves an hour whenever a payment bug comes back |
 | Compounding | A scenario builder written for one incident that later makes invariant tests and a migration comparator cheap to build |
-| Negative compounding | Fragile helper scripts whose upkeep costs more than they save, until people route around them or avoid touching the module |
+| Failed investment | A helper's setup and upkeep cost more than the benefit observed across its intended uses |
+| Negative compounding | Brittle checks delay repairs; engineers bypass them, more faults accumulate, and the next repair becomes harder still |
 
-Recurring returns are completely fine; plenty of useful tools stop there and still earn their keep. Actual compounding is rarer, and the sharpest test for it is not "did this save time?" It is: **what becomes practical after this investment that was too slow or too risky before?**
+An expensive tool can be a failed investment without creating a reinforcing cycle. To call it negative compounding, identify how its costs make the next improvement harder. The same discipline applies in the other direction: reuse alone does not establish positive compounding.
 
-That usually happens across a short chain of capabilities rather than inside a single tool:
+Recurring returns are completely fine; plenty of useful tools stop there and still earn their keep. For a compounding claim, ask: **which later capability became cheaper or more effective to build, and what evidence connects that benefit to the earlier investment?**
 
-- **From one bad incident to deleting old code:** Capture a repeatable logic bug as a [persistent reproducer](./patterns/persistent-reproducer.md), or turn an unrepeatable production outage into durable telemetry with [incident to instrument](./patterns/incident-to-instrument.md). Once a few cases repeat the same setup boilerplate, pull out [scenario builders](./patterns/scenario-builders.md). Feed those builders into [executable invariants](./patterns/executable-invariants.md), reuse the same corpus for [differential verification](./patterns/differential-verification.md) when you replace the old calculator, and use a [subtraction investigation](./patterns/subtraction-investigation.md) to delete the legacy path cleanly.
-- **From noisy reviews to steady cleanup:** Turn a repeated review correction into a [review comment to guardrail](./patterns/review-comment-to-guardrail.md). Freeze legacy violations with an [architectural ratchet](./patterns/architectural-ratchet.md) so you can ship while cleaning up. Put the checks behind a [capability command](./patterns/capability-command.md) that runs identically locally and in CI, and check whether the setup still pays rent in an [investment retrospective](./patterns/investment-retrospective.md).
+## Combine patterns when the work calls for it
 
-Stop walking a chain as soon as the next piece stops paying for itself.
+These are possible routes through a larger change. Start where the evidence is missing, and add the next capability only when the task needs it.
+
+### Make a difficult subsystem replaceable
+
+Capture a repeatable bug as a [persistent reproducer](./patterns/persistent-reproducer.md). When several cases need the same setup, [scenario builders](./patterns/scenario-builders.md) can supply inputs to [executable invariants](./patterns/executable-invariants.md) and later [differential verification](./patterns/differential-verification.md). The same inputs and expected outcomes can then check a replacement. A [subtraction investigation](./patterns/subtraction-investigation.md) checks the remaining obligations before removing the old path.
+
+Stop at the reproducer if there is only one useful case. If old and new implementations agree but the business rule is unsettled, resolve that rule before expanding the comparator.
+
+### Reduce recurring review work
+
+Turn an agreed, detectable correction into a [review comment to guardrail](./patterns/review-comment-to-guardrail.md). If legacy violations prevent adoption, an [architectural ratchet](./patterns/architectural-ratchet.md) can allow cleanup without accepting new violations. A [capability command](./patterns/capability-command.md) is useful when running the check still needs hidden setup.
+
+Keep the existing test command if it already works. Leave disputed design choices with reviewers; a noisy rule can cost more attention than the original comment. Revisit the combined burden with an [investment retrospective](./patterns/investment-retrospective.md).
+
+### Delegate one kind of task
+
+Use [verified retrieval](./patterns/verified-retrieval.md) when someone repeatedly misses existing guidance. If the difficult part is the method of investigation, [investigation to skill](./patterns/investigation-to-skill.md) can preserve and rehearse that method on another problem. [Earned delegation](./patterns/earned-delegation.md) uses the resulting evidence to revisit the scope of work that can be handed off.
+
+Keep the boundary narrow until unfamiliar tasks meet the same acceptance standard with less total supervision and rework. A missing business decision needs its owner, even when a procedure is easy to find.
 
 ## How patterns reinforce and pull against each other
 

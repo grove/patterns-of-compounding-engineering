@@ -114,11 +114,22 @@ class SiteBuildTests(unittest.TestCase):
         self.write("README.md", "# Patterns\n")
         self.write("examples/README.md", "# Billing lab\n")
         self.write("examples/billing_lab.py", "print('synthetic example')\n")
+        self.write("examples/evolving-billing/replay.py", "print('evolving example')\n")
+        self.write(
+            "examples/evolving-billing/README.md",
+            "# Evolving billing\n\n*Follow the next change.*\n\n"
+            "## Try a restart\n\n[Runner](./replay.py), "
+            "[guide](../../guide.md#choose-a-problem) and "
+            "[reproducer](../../patterns/persistent-reproducer.md).\n",
+        )
         self.write(
             "guide.md",
             "# Using the guide\n\n*Start with a problem.*\n\n"
             "## Use the task already open\n\nTry one small improvement.\n\n"
             "## Give the method to the next investigator\n\nTry a skill.\n\n"
+            "## Make a difficult subsystem replaceable\n\nTry known cases.\n\n"
+            "## Reduce recurring review work\n\nCheck an agreed rule.\n\n"
+            "## Delegate one kind of task\n\nKeep the boundary narrow.\n\n"
             "## Choose a problem\n\n[Replay](./patterns/persistent-reproducer.md)\n",
         )
         self.write(
@@ -159,6 +170,7 @@ class SiteBuildTests(unittest.TestCase):
             "../guide.md?view=print#choose-a-problem": "../guide.html?view=print#choose-a-problem",
             "../README.md": "../index.html",
             "../examples/README.md": f"{site_build.REPO}/blob/main/examples/README.md",
+            "../examples/evolving-billing/README.md#try-a-restart": "../examples/evolving-billing/index.html#try-a-restart",
             "../examples/billing_lab.py#L1": f"{site_build.REPO}/blob/main/examples/billing_lab.py#L1",
             "#run-it": "#run-it",
         }
@@ -193,6 +205,22 @@ class SiteBuildTests(unittest.TestCase):
         article.write_text(content.replace("#maintenance", "#does-not-exist"), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "Missing anchor"):
             site_build.check_links(pages)
+
+    def test_nested_walkthrough_keeps_assets_navigation_and_source_links_usable(self):
+        pages = site_build.build()
+        walkthrough = self.output / "examples/evolving-billing/index.html"
+        self.assertIn(walkthrough, pages)
+        result = HTMLFacts(walkthrough.read_text(encoding="utf-8"))
+        self.assertIn("../../guide.html#choose-a-problem", result.links)
+        self.assertIn("../../patterns/persistent-reproducer.html", result.links)
+        self.assertIn("../../#patterns", result.links)
+        self.assertIn("../../favicon.svg", result.links)
+        self.assertTrue(any(link.startswith("../../style.css?v=") for link in result.links))
+        self.assertIn(f"{site_build.REPO}/blob/main/examples/evolving-billing/replay.py", result.links)
+        homepage = HTMLFacts((self.output / "index.html").read_text(encoding="utf-8"))
+        self.assertIn("examples/evolving-billing/index.html", homepage.links)
+        sitemap = (self.output / "sitemap.xml").read_text(encoding="utf-8")
+        self.assertIn(f"<loc>{site_build.URL}examples/evolving-billing/index.html</loc>", sitemap)
 
     def test_generated_validation_rejects_a_missing_asset(self):
         pages = site_build.build()

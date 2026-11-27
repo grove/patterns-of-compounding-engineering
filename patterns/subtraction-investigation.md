@@ -1,49 +1,49 @@
 # Subtraction investigation
 
-*Gather the evidence you need to delete old software, or prove why you can't yet.*
+*Gather the evidence you need to delete old software, or prove why you cannot yet.*
 
-Every time pricing changes, someone has to update a legacy CSV export too. It has its own serializer, its own fixtures, and an old compatibility flag. Nobody on the team remembers which customer uses it. Deleting it feels obviously right; proving that deleting it won't break month-end close feels like a rabbit hole nobody has time to jump into.
+Every time pricing changes, someone has to update a legacy CSV export too. It has its own serializer, its own fixtures, and an old compatibility flag. Nobody on the team remembers which customer uses it. Deleting it feels overdue, yet proving that deleting it will not break month-end close takes real detective work that keeps getting pushed to next sprint.
 
 A subtraction investigation puts a small, explicit budget on answering that question. Pick one target, trace who still depends on it, and make a concrete call: remove it, shrink it, or leave it alone. Discovering a real consumer and deciding *not* to delete is a good outcome. It beats finding out on the last Friday of the month.
 
-Use this for dead feature flags, compatibility layers, cron jobs, config knobs, and duplicated code paths that are actively costing you time: repeated edits, noisy support tickets, or a pinned dependency blocking upgrades. "That directory looks big" isn't enough reason on its own.
+Use this for dead feature flags, compatibility layers, cron jobs, config knobs, and duplicated code paths that are actively costing you time: repeated edits, noisy support tickets, or a pinned dependency blocking upgrades. "That directory looks big" is rarely enough reason on its own.
 
 ## Draw a sharp box around the candidate
 
-In our billing service, say the target is the legacy monthly invoice CSV export: its HTTP endpoint, serializer, scheduled delivery job, and rollout flag. Historical invoice rows and the newer export format stay completely untouched.
+In our billing service, say the target is the legacy monthly invoice CSV export: its HTTP endpoint, serializer, scheduled delivery job, and rollout flag. Historical invoice rows and the newer export format stay untouched.
 
-State the real cost in concrete terms: every new invoice field forces edits to two serializers, and the old one pins an outdated library nobody else needs. "Cleaner code" is too vague to weigh against operational risk.
+State the cost in concrete terms: every new invoice field forces edits to two serializers, and the old one pins an outdated library nobody else needs. "Cleaner code" is too vague to weigh against operational risk.
 
-Check who owns the *capability* as well as the repo. Engineering owns the code, yet another team might depend on its output every month. Removing code is the easy half; retiring an organizational obligation is usually what takes real negotiation. Find the person with authority to sign off early.
+Check who owns the *capability* as well as the repository. Engineering owns the code, yet another team may depend on its output every month. Retiring an organizational obligation usually takes more negotiation than deleting the files, so find the person with authority to sign off early.
 
 ## Cross-check code and runtime evidence
 
-Start by hunting through code, config, cron schedules, feature flags, Terraform/Helm manifests, and adjacent repos. Don't trust a plain grep for an endpoint URL; routes and jobs are often assembled dynamically or registered in config.
+Start by hunting through code, config, cron schedules, feature flags, Terraform/Helm manifests, and adjacent repositories. Do not trust a plain grep for an endpoint URL, because routes and jobs are often assembled dynamically or registered in config.
 
 Then check runtime telemetry, and interrogate every zero before celebrating:
 
 - Does the metric cover every region, tenant, and entry point?
 - Could requests be sampled, filtered out, or dropped when logging fails?
-- Did you watch across the actual business cycle (month-end, quarter-end, tax year)?
+- Did you watch across the full business cycle (month-end, quarter-end, tax year)?
 - Is this code only hit during failover or manual recovery?
 
 In our billing example, HTTP logs show zero requests to the legacy download endpoint for ninety days. It looks dead until you notice the scheduled job still drops CSV files into a shared bucket, and finance's month-end script reads that bucket directly. Endpoint logs were completely blind to the real consumer.
 
-Write down your blind spots. If storage access logs can't identify the reader, check the consumer's job config, talk to the team running it, or run a controlled rehearsal.
+Proving the absence of a dependency is intrinsically hard, so write down your blind spots. When storage access logs cannot identify the reader, check the consumer's job config, talk to the team running it, or run a controlled rehearsal.
 
 ## Separate current traffic from real obligations
 
-Zero traffic this week doesn't mean zero obligation. Annual tax reports, audit exports, emergency fallback paths, and contractual formats sit quiet for months and still matter enormously on the one day they run. Let the business cycle set your observation window, not an arbitrary "30 days of zero traffic" rule.
+Annual tax reports, audit exports, emergency fallback paths, and contractual formats sit quiet for months and still matter on the one day they run. Let the business cycle set your observation window instead of an arbitrary "30 days of zero traffic" rule.
 
-When you find a consumer, ask what they *actually* depend on. Often it's a specific column order or drop schedule rather than the whole legacy subsystem. A thin adapter over the newer export might satisfy finance's importer and let you delete the old serializer and its pinned dependency. Just remember that an adapter is still code with an owner and tests.
+When you find a consumer, ask what they truly depend on. Often it is a specific column order or drop schedule rather than the whole legacy subsystem. A thin adapter over the newer export might satisfy finance's importer and let you delete the old serializer and its pinned dependency — just remember that an adapter is still code with an owner and tests.
 
-Keep data retention completely separate from code deletion. Stopping a delivery job doesn't authorize wiping historical exports, and destructive schema drops change what rollback looks like. Settle data retention explicitly before touching anything irreversible.
+Keep data retention separate from code deletion. Stopping a delivery job does not authorize wiping historical exports, and destructive schema drops change what rollback looks like. Settle data retention explicitly before touching anything irreversible.
 
 ## Turn it off before making rollback painful
 
 Whenever you can, separate *stopping use* from *deleting code*. Move the identified consumer first, verify they get everything they need, and disable the old path while keeping a tested way to flip it back on.
 
-For the CSV export, have finance run a dry import on a synthetic month-end file generated by the new path (including credits and cancelled invoices) before touching the live schedule. Compare the fields their importer cares about, not byte-for-byte formatting unless something genuinely parses raw bytes.
+For the CSV export, have finance run a dry import on a synthetic month-end file generated by the new path (including credits and cancelled invoices) before touching the live schedule. Compare the fields their importer cares about instead of byte-for-byte formatting, unless something parses raw bytes.
 
 Keep a short removal record right in the tracking issue:
 
@@ -60,20 +60,20 @@ Restore plan: re-enable retained job against compatible source data
 Delete after: month-end checks pass and finance owner signs off
 ```
 
-A kill switch only protects you if the old path still works against current data, so test restoration before leaning on it. And if a migration mutates data irreversibly, no feature flag can save you; design the recovery plan first. Stripe's [Online migrations at scale](https://stripe.com/blog/online-migrations) is a good model for staging cutovers before deleting old structures.
+A kill switch only protects you if the old path still works against current data, so test restoration before leaning on it. When a migration mutates data irreversibly, no feature flag can save you; design the recovery plan first. Stripe's [Online migrations at scale](https://stripe.com/blog/online-migrations) is a good model for staging cutovers before deleting old structures.
 
 ## Finish the cleanup cleanly
 
 Once the sign-off conditions hold, remove the lot: dead code, flags, retired-behavior tests, cron entries, alerts, docs, and the dependency it was pinning. Move any tests covering obligations that still apply onto the replacement path.
 
-Leave a brief tombstone note in the commit or decision log recording what was removed and why, so a future engineer isn't mystified by a vanished config flag. GitHub's [feature-flag cleanup write-up](https://github.blog/engineering/infrastructure/ship-code-faster-safer-feature-flags/) gives a practical look at automating mechanical branch cleanup once the human decision is settled. Automation is great at rewriting stale branches; it still can't tell you whether finance has an undocumented cron job reading your S3 bucket.
+Leave a brief tombstone note in the commit or decision log recording what was removed and why, so a future engineer is not mystified by a vanished config flag. GitHub's [feature-flag cleanup write-up](https://github.blog/engineering/infrastructure/ship-code-faster-safer-feature-flags/) gives a practical look at automating mechanical branch cleanup once the human decision is settled. Automation rewrites stale branches cleanly, yet it still cannot tell you whether finance has an undocumented cron job reading your S3 bucket.
 
 ## Know when to walk away
 
 Investigating deletion takes time away from everything else. If a low-maintenance component turns out to have a real consumer and migrating them costs more than living with the code, stop. Write down what you learned about ownership and consumers next to the code so the next person starts miles ahead.
 
-When a removal *does* land, judge the win by what gets easier next (one fewer serializer to edit, one dependency upgrade unblocked, one less exception in code review) rather than bragging about lines of code deleted. And resist building a "company-wide dead-code dashboard" after one cleanup; standardize your removal checklist only after you've run through it a few times.
+When a removal lands, judge the win by what gets easier next — one fewer serializer to edit, one dependency upgrade unblocked, one less exception in code review — instead of counting deleted lines. Resist building a "company-wide dead-code dashboard" after one cleanup; standardize your removal checklist only after you have run through it a few times.
 
-## Related patterns
+## How it connects
 
-Use [differential verification](./differential-verification.md) to verify a replacement meets a consumer's real needs, an [architectural ratchet](./architectural-ratchet.md) to stop new callers from hooking onto something you're trying to retire, and an [investment retrospective](./investment-retrospective.md) to apply the same deletion discipline to your own internal tools.
+Subtraction is often the final step after [differential verification](./differential-verification.md) proves a replacement meets a consumer's real needs, or after an [architectural ratchet](./architectural-ratchet.md) stops new callers from hooking onto code you want to retire. Apply the same discipline to your own internal tools whenever an [investment retrospective](./investment-retrospective.md) flags something that no longer earns its keep.

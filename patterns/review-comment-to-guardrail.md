@@ -2,23 +2,23 @@
 
 *Turn an agreed, recurring review catch into a check that explains itself.*
 
-Picture a JavaScript version of our billing service. For the third time this month, a reviewer flags a billing handler importing the payment SDK directly instead of going through `src/payments/client.js`, which handles retries, idempotency keys, and error mapping. The reviewer writes the same explanation, the author revises the PR, and two weeks later somebody else makes the exact same mistake.
+Picture a JavaScript version of our billing service. For the third time this month, a reviewer flags a billing handler importing the payment SDK directly instead of going through `src/payments/client.js`, which handles retries, idempotency keys, and error mapping. The reviewer writes the same explanation, the author updates the pull request, and two weeks later somebody else makes the same mistake.
 
-A ten-line static check can catch that before anyone opens a pull request. Blocking the import helps, and attaching the *reason* plus the approved alternative right to the error message is what actually saves everyone's time.
+A ten-line static check catches that before anyone opens a pull request. Blocking the import helps, and putting the reason plus the approved replacement right in the error message is what saves everyone's time.
 
-## Make sure it's a real team rule, not one reviewer's taste
+## Check that the team agrees on the rule
 
-Some review catches are clean and mechanical: a forbidden import, a missing migration field, a generated file edited without its source. Others are judgment calls: whether an abstraction pulls its weight, whether a name fits the domain, whether a change needs more tests.
+Some review catches are mechanical: a forbidden import, a missing migration field, a generated file edited without its source. Others are judgment calls: whether an abstraction pulls its weight, whether a name fits the domain, whether a change needs more tests.
 
-Before automating anything, write down one case that should fail and one nearby case that should pass. If two experienced reviewers disagree on those examples, hash it out with the team first. Encoding the loudest reviewer's personal preference into CI turns a guardrail into institutional bureaucracy.
+Before automating anything, write down one case that should fail and one nearby case that should pass. If two experienced reviewers disagree on those examples, hash it out with the team first. Encoding one loud reviewer's preference into CI just turns personal taste into mandatory friction.
 
-Also make sure people *can* actually comply. If `src/payments/client.js` doesn't support the operation a new feature needs, blocking direct SDK imports just turns every PR into an argument over lint-ignore comments. Fix the adapter or narrow the rule until the happy path works.
+Also check that people can comply cleanly. If `src/payments/client.js` lacks the operation a new feature needs, blocking direct SDK imports turns every pull request into an argument over lint-ignore comments. Fix the adapter or narrow the rule until the normal path works.
 
 ## Reach for a built-in rule first
 
-For this import boundary, ESLint already ships [no-restricted-imports](https://eslint.org/docs/latest/rules/no-restricted-imports) with custom error messages. No custom AST plugin required.
+For this import boundary, ESLint already ships [no-restricted-imports](https://eslint.org/docs/latest/rules/no-restricted-imports) with custom error messages. You do not need a custom AST plugin.
 
-Here's how that looks in a flat ESLint config, keeping `src/payments/` outside the restricted directory:
+Here is how that looks in a flat ESLint config, keeping `src/payments/` outside the restricted directory:
 
 ```javascript
 export default [{
@@ -34,13 +34,13 @@ export default [{
 }];
 ```
 
-The error message names the exact replacement and explains *why* bypassing it causes bugs. A message that says "Violation of Policy 14" forces the author to hunt down the same reviewer anyway.
+The error message names the replacement and explains why bypassing it causes bugs. A message saying "Violation of Policy 14" sends the author right back to the same reviewer.
 
-Be upfront about what the rule can't see. `no-restricted-imports` checks static import statements, not dynamic imports, indirect re-exports, or clever package aliases. Note that limit in the config comment so reviewers don't assume the linter guarantees something it doesn't. If you need full module-graph enforcement, use a dependency checker built for that job.
+Be upfront about what the rule cannot see. `no-restricted-imports` checks static import statements, so dynamic imports, indirect re-exports, and package aliases get past it. Note that limit in a comment next to the config so reviewers do not assume the linter guarantees more than it does. When you need full module-graph enforcement, use a dependency checker built for that job.
 
 ## Test the rule through your real config
 
-More lint rules fail because of a bad glob or an ignored directory than because of bad logic. Keep a small set of test fixtures and run them through the *actual* effective ESLint configuration, not just a unit test of the rule in isolation.
+More lint rules fail because of a bad glob or an ignored directory than because of bad logic. Keep a small set of test fixtures and run them through the *effective* ESLint configuration, alongside any isolated unit tests for the rule.
 
 For the billing import rule, five cases cover most ways it can silently break:
 
@@ -52,33 +52,33 @@ For the billing import rule, five cases cover most ways it can silently break:
 | The payments adapter imports `stripe` | Accept |
 | A string or comment mentions `stripe` | Accept |
 
-Run these in a dedicated rule-test harness (or via virtual file paths) so deliberate violations don't break normal linting. Assert the specific rule ID rather than just a non-zero exit code, so a stray syntax error can't pass as a rule hit. If you eventually write a custom rule, ESLint's [RuleTester](https://eslint.org/docs/latest/extend/custom-rule-tutorial) handles valid and invalid cases cleanly, though you still want one smoke test against the real repo config.
+Run these in a dedicated rule-test harness (or via virtual file paths) so deliberate violations do not break normal linting. Assert the specific rule ID instead of checking only for a non-zero exit code, so a stray syntax error cannot pass as a rule hit. If you write a custom rule, ESLint's [RuleTester](https://eslint.org/docs/latest/extend/custom-rule-tutorial) handles valid and invalid cases cleanly, paired with one smoke test against the real repository config.
 
 ## Ship it cleanly, without a wall of warnings
 
-Confirm the rule against a few recent PRs, run it across the whole repo, and read every existing match before turning it on.
+Confirm the rule against a few recent pull requests, run it across the repository, and read every existing match before enabling it.
 
-If there are three existing violations, just fix them in the same PR. If there are forty and untangling them takes real work, freeze them with an [architectural ratchet](./architectural-ratchet.md) instead of downgrading the rule to "warn." Nobody reads a permanent stream of CI warnings.
+If there are three existing violations, fix them in the same pull request. If there are forty and untangling them takes real work, freeze them with an [architectural ratchet](./architectural-ratchet.md) instead of downgrading the rule to "warn." Permanent CI warnings quickly become background noise.
 
-Hook the check into whatever local command developers already run before asking for review, and wire it into the editor if it's fast. Keep CI as the final gate so enforcement doesn't depend on everyone having the same IDE plugins.
+Hook the check into whatever local command developers already run before asking for review, and wire it into the editor if it is fast. Keep CI as the final gate so enforcement never depends on everyone having the same IDE plugins.
 
 ## Treat exceptions as a signal
 
-Occasionally a direct SDK call is genuinely necessary during a migration or spike. Put the inline exemption right next to the call with a short explanation of why it's needed and when it can go away. Avoid blanket directory ignores that quietly stay in the config for years.
+Occasionally a direct SDK call is necessary during a migration or spike. Put the inline exemption next to the call with a short explanation of why it is needed and when it can go away. Avoid blanket directory ignores that linger in the config for years.
 
-Pay attention when exemptions pile up. Three people bypassing the same rule in a month rarely means the team is sloppy; it usually means the adapter is missing something or the rule itself is outdated. Skip auto-fixers for anything that changes runtime behavior, too. Swapping an import path can change retry semantics or error shapes, and a human needs to inspect that.
+Pay attention when exemptions pile up. Three people bypassing the same rule in a month usually points to a missing capability in the adapter or an outdated rule. Skip auto-fixers for anything that changes runtime behavior, too: swapping an import path can change retry semantics or error shapes, and a human needs to inspect that.
 
 ## Leave judgment in code review
 
-Automating the import check doesn't eliminate review; it frees reviewers to check the things a linter *can't* see: whether a payment operation actually needs an idempotency key, whether that key stays stable across retries, and whether the adapter's failure mode makes sense here. A handler can import the approved client and still pass a fresh UUID on every retry.
+Automating the import check frees reviewers to look at the things a linter misses: whether a payment operation needs an idempotency key, whether that key stays stable across retries, and whether the adapter's failure mode fits the caller. A handler can import the approved client and still pass a fresh UUID on every retry.
 
-## Check whether it actually helped
+## Check whether it helped
 
-Don't measure success by how many PRs the rule rejects. Once people learn the pattern, a good rule fires rarely. Instead, watch whether the same review comment disappears, whether newcomers can fix failures from the diagnostic without asking around, and how often false positives waste time. When the rule's reason disappears, delete it.
+Judge the rule by whether the repeated review comment disappears, whether newcomers can fix failures from the error message without asking around, and how often false positives waste time. Once people learn the convention, a good rule fires rarely. When the underlying reason goes away, delete the rule.
 
-## Related patterns and sources
+## How it connects and sources
 
-Use an [architectural ratchet](./architectural-ratchet.md) when a new rule meets a backlog of legacy violations, [executable invariants](./executable-invariants.md) for behavioral rules static checks can't express, and a [capability command](./capability-command.md) to keep local and CI runs aligned.
+When a new guardrail runs into a backlog of legacy violations, pair it with an [architectural ratchet](./architectural-ratchet.md). When a recurring review catch is about runtime behavior that static checks cannot express, move it into [executable invariants](./executable-invariants.md). Run the checks through a [capability command](./capability-command.md) so local runs and CI stay aligned.
 
-- [ESLint: no-restricted-imports](https://eslint.org/docs/latest/rules/no-restricted-imports): built-in import restrictions, custom messages, and static vs. dynamic limits.
+- [ESLint: no-restricted-imports](https://eslint.org/docs/latest/rules/no-restricted-imports): built-in import restrictions, custom messages, and static versus dynamic limits.
 - [ESLint: Custom Rule Tutorial](https://eslint.org/docs/latest/extend/custom-rule-tutorial): testing valid and invalid cases with `RuleTester`.

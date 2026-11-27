@@ -2,23 +2,23 @@
 
 *Stop debating two designs on a whiteboard; run both against the same awkward cases.*
 
-A team burns two design meetings arguing over whether billing rules belong in plain application functions or a data-driven rule engine. Both sides have eloquent advocates and increasingly ornate diagrams, and nobody has actually tried adding the next pricing rule to either design.
+A team burns two design meetings arguing over whether billing rules belong in plain application functions or a data-driven rule engine. Both sides have strong advocates and increasingly elaborate diagrams, and nobody has tried adding the next pricing rule to either design.
 
-Build the smallest believable version of each option, put them both through the exact same uncomfortable cases, and keep the evidence so someone can revisit the decision later without starting the argument from zero.
+Build the smallest believable version of each option, put them both through the same uncomfortable cases, and keep the evidence so someone can revisit the decision later without starting the argument from zero.
 
-Save this for genuine forks where running code can settle the question. Skip it when an external contract forces your hand, when the choice is trivial to reverse later, or when the real unknown is whether customers want the feature at all. Two technical prototypes won't answer a product question.
+Save this for genuine forks where running code can settle the question. Skip it when an external contract forces your hand, when the choice is easy to reverse later, or when the real unknown is whether customers want the feature at all. Two technical prototypes will not answer a product question.
 
 ## Frame the question before writing code
 
-"Which architecture is cleaner?" leads nowhere. Ask questions tied to work the team actually has to live with:
+"Which architecture is cleaner?" leads nowhere. Ask questions tied to work the team has to live with:
 
 - Can we add a backdated plan change without breaking how historical invoices are explained?
 - Can the system catch contradictory rules before they hit production?
-- Can an engineer who didn't write this trace a disputed charge back to the rule that caused it?
+- Can an engineer who did not write this trace a disputed charge back to the rule that caused it?
 
-Passing tests can't answer that third question; someone unfamiliar with the code has to sit down and try to read it.
+Passing tests cannot answer that third question. Someone unfamiliar with the code has to sit down and read it.
 
-In our billing example, say the immediate ask is an effective-dated discount. The team expects more pricing tweaks later, but nobody in finance has asked to edit rules without a deploy. That scopes the experiment immediately: a rule-authoring UI is out of bounds for today's decision.
+In our billing example, say the immediate ask is an effective-dated discount. The team expects more pricing tweaks later, and nobody in finance has asked to edit rules without a deploy. That scopes the experiment right away: a rule-authoring UI stays out of bounds for today's decision.
 
 Write a half-page brief before starting:
 
@@ -46,44 +46,46 @@ Scale the timebox to the stakes: an afternoon for picking a helper library, a fe
 
 Give both prototypes the same interface: account state, proposed change, and effective date go in; invoice lines and explanations come out. Keep network calls, database writes, and ambient clocks outside the comparison.
 
-Feed both designs cases that actually hurt. Include at least one ugly synthetic case drawn from a real past incident; clean happy-path invoices make almost any architecture look good. Run the current production implementation alongside them if it's relevant, while checking both candidates against your [executable invariants](./executable-invariants.md) so neither inherits an old bug unchallenged.
+Feed both designs cases that hurt. Include at least one ugly synthetic case drawn from a real past incident, since clean happy-path invoices make almost any architecture look good. Run the current production implementation alongside them when it is relevant, and check both candidates against your [executable invariants](./executable-invariants.md) so neither inherits an old bug unchallenged.
 
-Then try making the *next* change in both prototypes and pay attention to where the friction lands. Did the rule table suddenly need a precedence mechanism to resolve overlapping discounts? Did the explicit functions make it ugly to generate a line-by-line explanation?
+Then try making the *next* change in both prototypes and notice where the friction lands. Did the rule table suddenly need a precedence mechanism to resolve overlapping discounts? Did the explicit functions make it clumsy to generate a line-by-line explanation?
 
-Watch out for two traps that skew short spikes. First, people naturally polish the option they already favor, and someone who already knows the existing codebase will always move faster in it. Note uneven familiarity honestly rather than mistaking it for long-term cost. Second, **short prototypes flatter designs with low upfront cost over designs with better long-term economics.** A quick hack almost always wins a one-day race against a cleaner model unless you deliberately test a realistic follow-up change (like adding a second overlapping rule or debugging an unexpected output).
+Watch out for two traps that skew short spikes. First, people polish the option they already favor, and someone who knows the existing codebase moves faster in it. Note uneven familiarity honestly instead of mistaking it for long-term cost. Second, short prototypes flatter designs with low upfront cost over designs with better long-term economics. A quick hack almost always wins a one-day race against a cleaner model unless you test a realistic follow-up change, like adding a second overlapping rule or debugging an unexpected output.
 
 ## Keep "do less" on the table
 
-Sometimes the comparison points to a smaller move than either camp expected. Maybe the rule table handles the new discount cleanly but immediately needs priority ordering and conflict validation, while plain functions stay local, readable, and easy for support to trace.
+Sometimes the comparison points to a smaller move than either camp expected. Maybe the rule table handles the new discount cleanly and immediately needs priority ordering and conflict validation, while plain functions stay local, readable, and easy for support to trace.
 
-Choosing plain functions doesn't prove rule engines are bad; it proves you don't need one until rule count or non-engineering authoring actually justifies the extra complexity. Keep the overlap cases you discovered so you have them ready if that day comes. And whenever "handle it manually for now" is a real option, include it honestly along with the operational work and error risk it dumps on whoever has to run it.
+Picking plain functions for today means you wait until rule count or non-engineering authoring justifies the extra machinery. Keep the overlap cases you discovered so they are ready if that day arrives. Whenever "handle it manually for now" is a real option, include it honestly along with the operational work and error risk it puts on whoever has to run it.
 
-## Leave a decision trail, not two live codebases
+## Leave a decision trail
 
-Save the shared test cases, expected outputs, commit hashes, run commands, and a short note explaining the call and what would flip it:
+Save the shared test cases, expected outputs, commit hashes, run commands, and a short note explaining why you chose one option, what you rejected, and what condition should trigger revisiting the call:
 
 ```text
 Chosen: explicit pricing functions for the effective-dated discount
+Rejected: generic rule table (needed precedence and conflict validation immediately)
 Why: changes stayed local and invoice explanations were easy to follow
 
 Unresolved: non-engineer editing, large overlapping rule sets
-Revisit if: business staff need to author pricing rules directly
+Revisit if: business staff need to author pricing rules directly, or rule count exceeds ~15
 Evidence: shared corpus, both prototypes, notes from the trace exercise
 Status: experiment only; neither prototype is a supported API
 ```
 
-Keep prototype code clearly separated from production code. If keeping both prototypes runnable as dependencies move is expensive, preserve the commit references, test cases, and decision note instead of promising to maintain dead spikes forever.
+Keep prototype code clearly separated from production code. When keeping both prototypes runnable as dependencies move becomes expensive, keep the commit references, test cases, and decision note rather than promising to maintain dead spikes forever.
 
-Simon Willison's [Hoard things you know how to do](https://simonwillison.net/guides/agentic-engineering-patterns/hoard-things-you-know-how-to-do/) makes a great case for keeping working small experiments around to combine later. On a team, the crucial addition is a clear label on each experiment: what it proved, under what assumptions, and what it deliberately left untouched.
+Simon Willison's [Hoard things you know how to do](https://simonwillison.net/guides/agentic-engineering-patterns/hoard-things-you-know-how-to-do/) makes a strong case for keeping working small experiments around to combine later. On a team, the crucial addition is a clear label on each experiment: what it proved, under what assumptions, and what it deliberately left untouched.
 
 ## Know when to stop
 
-A prototype can expose an awkward data model or a missing input; it won't prove production scalability or failure recovery just because the happy path ran. If load or migration safety is the real deciding factor, include the smallest credible test of that concern before choosing, or mark it unresolved and budget for it explicitly.
+A prototype can expose an awkward data model or a missing input, yet it will not prove production scalability or failure recovery just because the happy path ran. When load or migration safety is the deciding factor, include the smallest credible test of that concern before choosing, or mark it unresolved and budget for it explicitly.
 
-Stop once extra work stops changing the decision. You rarely need a third prototype unless the first two uncovered a brand-new question neither can answer. Even the discarded prototype earns its keep if the shared cases later feed [differential verification](./differential-verification.md) or save someone from re-running the same debate next year.
+Stop once extra work stops changing the decision. You rarely need a third prototype unless the first two uncovered a brand-new question neither can answer.
 
-## Sources and related patterns
+## How it connects and sources
+
+Competing prototypes are much cheaper to run when [scenario builders](./scenario-builders.md) and [executable invariants](./executable-invariants.md) already exist to supply the shared cases and verify both options. Even the discarded prototype earns its keep when those shared cases later feed [differential verification](./differential-verification.md) or save someone from re-running the same debate next year. Check whether kept spikes are still earning their upkeep in an [investment retrospective](./investment-retrospective.md).
 
 - Ryan Singer, [Find the Elements](https://basecamp.com/shapeup/1.3-chapter-04) (*Shape Up*): sketching alternative approaches at low fidelity when writing code too early slows exploration down.
 - Martin Fowler, [Sacrificial Architecture](https://martinfowler.com/bliki/SacrificialArchitecture.html): why deliberately temporary software still needs enough internal clarity to teach you something real.
-- [Investment retrospective](./investment-retrospective.md): checking whether kept experiments and spikes are still worth maintaining after the original decision.

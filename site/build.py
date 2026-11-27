@@ -6,6 +6,7 @@ collections; see NOTICE. The catalogue and page structure are new.
 """
 from __future__ import annotations
 import argparse
+import hashlib
 import html
 import json
 import os
@@ -94,7 +95,7 @@ def shell(title: str, description: str, body: str, path: str = '', kind: str = '
   <meta property="og:description" content="{esc(description)}">
   <meta property="og:url" content="{URL}{path}">
   <link rel="icon" type="image/svg+xml" href="{prefix}favicon.svg">
-  <link rel="stylesheet" href="{prefix}style.css">
+  <link rel="stylesheet" href="{prefix}style.css?v={hashlib.sha256((ROOT / 'site/style.css').read_bytes()).hexdigest()[:16]}">
   <script src="{prefix}site.js" defer></script>
 </head>
 <body class="{kind}">

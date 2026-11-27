@@ -1,0 +1,83 @@
+[
+  {
+    "slug": "persistent-reproducer",
+    "title": "Persistent reproducer",
+    "group": "reproduce",
+    "problem": "We keep investigating the same failure.",
+    "summary": "Keep the sequence, inputs and expected result that made a difficult bug understandable.",
+    "keywords": "bug incident replay webhook duplicate debug"
+  },
+  {
+    "slug": "scenario-builders",
+    "title": "Scenario builders",
+    "group": "reproduce",
+    "problem": "Setting up a useful test takes longer than running it.",
+    "summary": "Make meaningful business states cheap to construct, with time and defaults under control.",
+    "keywords": "fixture test data seed clock setup"
+  },
+  {
+    "slug": "executable-invariants",
+    "title": "Executable invariants",
+    "group": "reproduce",
+    "problem": "Our tests agree with our code. Are both wrong?",
+    "summary": "State the guarantees the business needs and check them across many inputs.",
+    "keywords": "correctness properties property testing oracle business rules"
+  },
+  {
+    "slug": "differential-verification",
+    "title": "Differential verification",
+    "group": "reproduce",
+    "problem": "We need to replace code nobody quite trusts.",
+    "summary": "Compare old and new behavior on the same inputs, then investigate the differences.",
+    "keywords": "migration legacy shadow compare replacement regression"
+  },
+  {
+    "slug": "architectural-ratchet",
+    "title": "Architectural ratchet",
+    "group": "change",
+    "problem": "We cannot fix every dependency before the next release.",
+    "summary": "Record existing violations precisely and stop new ones while making room for gradual repair.",
+    "keywords": "architecture dependencies baseline boundaries legacy imports"
+  },
+  {
+    "slug": "review-comment-to-guardrail",
+    "title": "Review comment to guardrail",
+    "group": "change",
+    "problem": "The same correction appears in every code review.",
+    "summary": "Turn one agreed, detectable mistake into a check with a useful explanation.",
+    "keywords": "lint automation review ci static analysis rules"
+  },
+  {
+    "slug": "capability-command",
+    "title": "Capability command",
+    "group": "change",
+    "problem": "Only one person knows how to run the investigation.",
+    "summary": "Package a useful engineering task so someone else can run it safely and understand the result.",
+    "keywords": "developer tooling command cli onboarding reproducible environment"
+  },
+  {
+    "slug": "competing-prototypes",
+    "title": "Competing prototypes",
+    "group": "invest",
+    "problem": "We are arguing about a design we could try.",
+    "summary": "Compare a few small implementations against the same question before committing.",
+    "keywords": "experiment design spike discovery alternatives decision"
+  },
+  {
+    "slug": "subtraction-investigation",
+    "title": "Subtraction investigation",
+    "group": "invest",
+    "problem": "We suspect this code can go, but cannot prove it.",
+    "summary": "Trace obligations and usage, rehearse removal, and name the evidence needed to delete.",
+    "keywords": "delete remove cleanup flags unused retirement deprecation"
+  },
+  {
+    "slug": "investment-retrospective",
+    "title": "Investment retrospective",
+    "group": "invest",
+    "problem": "We built the tool. Did it actually help?",
+    "summary": "Follow an investment into later work, including the time spent maintaining and teaching it.",
+    "keywords": "roi measurement friction economics time upkeep learning"
+  }
+]
+

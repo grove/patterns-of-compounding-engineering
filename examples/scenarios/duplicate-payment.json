@@ -1,0 +1,9 @@
+{
+  "name": "duplicate-payment",
+  "invoice": {"id": "inv_001", "amount_cents": 2400},
+  "events": [
+    {"id": "evt_001", "type": "payment_succeeded", "invoice_id": "inv_001", "amount_cents": 2400},
+    {"id": "evt_001", "type": "payment_succeeded", "invoice_id": "inv_001", "amount_cents": 2400}
+  ],
+  "expected": {"paid_cents": 2400, "applied_events": 1}
+}

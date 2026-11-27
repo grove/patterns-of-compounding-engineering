@@ -1,0 +1,18 @@
+Patterns of compounding engineering
+
+The Markdown renderer and parts of the build validation are adapted from
+Engineering that compounds, https://github.com/grove/engineering-that-compounds,
+and Software that improves with age,
+https://github.com/grove/software-that-improves-with-age,
+published by grove under the Apache License, Version 2.0.
+
+This collection adds a practical pattern catalogue, a Nordic Crisp theme,
+problem-based navigation, runnable billing examples and publication checks.
+
+Original attribution from Engineering that compounds:
+The static site generator, initial stylesheet and narration pipeline are adapted
+from Software that improves with age, https://github.com/grove/software-that-improves-with-age,
+published by grove under the Apache License, Version 2.0.
+This collection adds new essays, a Forest & Moss theme, accessible audio controls,
+narration provenance and build validation.
+

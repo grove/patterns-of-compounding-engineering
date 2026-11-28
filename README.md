@@ -4,7 +4,7 @@
 
 A team fixes a duplicate payment, replaces a calculation, or removes an old export. Some of that work can make the next change easier: a reproducible failure, a trusted comparison, a way to find the remaining consumers. Keeping those things has a cost. This guide is about choosing what is worth keeping and making it usable by someone else.
 
-The collection follows [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/). It puts their arguments to work through fifteen patterns, with examples, adoption steps, limits and sources.
+The collection follows [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/). It puts their arguments to work through nineteen patterns, with examples, adoption steps, limits and sources.
 
 **Website address:** [grove.github.io/patterns-of-compounding-engineering](https://grove.github.io/patterns-of-compounding-engineering/)
 
@@ -12,32 +12,35 @@ Have a task open already? Start with [a small loop for everyday work](./guide.md
 
 Working toward a larger change? See how the patterns can help you [replace a difficult subsystem](./guide.md#make-a-difficult-subsystem-replaceable), [reduce recurring review work](./guide.md#reduce-recurring-review-work), or [delegate one kind of task](./guide.md#delegate-one-kind-of-task). Each route explains when to stop adding machinery. To choose an investment, try [the tenfold exercise](./guide.md#use-the-tenfold-ambition-to-choose-the-next-investment): use the Theory of Constraints to identify what limits a worthwhile outcome before deciding which pattern deserves the effort.
 
-If the same difficulty keeps returning, [use AI to help investigate why](./guide.md#use-ai-to-investigate-recurring-friction). Follow one question from the original evidence to a small experiment, then check whether later work benefits. The existing patterns cover retaining, teaching and transferring what proves useful.
+If the same difficulty keeps returning, [use AI to help investigate why](./guide.md#use-ai-to-investigate-recurring-friction). Follow one question from the original evidence to a small experiment, then check whether later work benefits. Start with [capability composition](./patterns/capability-composition.md) when existing checks might make a new kind of work practical. The [investment canvas](https://grove.github.io/compounding-engineering/adoption/investment-canvas.html) helps a team choose one bounded attempt.
 
-## Understand failures and check behavior
+## Understand the work and check behavior
 
-1. **[Persistent reproducer](./patterns/persistent-reproducer.md)** — Keep the inputs and sequence that made a difficult failure understandable.
-2. **[Incident to instrument](./patterns/incident-to-instrument.md)** — Leave production able to answer the question that held up the last investigation.
-3. **[Scenario builders](./patterns/scenario-builders.md)** — Make meaningful business states cheap to construct.
-4. **[Executable invariants](./patterns/executable-invariants.md)** — Check the guarantees the business needs across many inputs.
-5. **[Differential verification](./patterns/differential-verification.md)** — Compare old and new implementations, then investigate their disagreements.
+1. **[Persistent reproducer](./patterns/persistent-reproducer.md)** — Keep the sequence, inputs and expected result that made a difficult bug understandable.
+2. **[Incident to instrument](./patterns/incident-to-instrument.md)** — Turn a hard production investigation into permanent telemetry that exposes the same failure class early.
+3. **[Successful work investigation](./patterns/successful-work-investigation.md)** — Examine the information, adjustments and options that helped ordinary work succeed.
+4. **[Scenario builders](./patterns/scenario-builders.md)** — Make meaningful business states cheap to construct, with time and defaults under control.
+5. **[Reusable domain scenarios](./patterns/reusable-domain-scenarios.md)** — Keep reviewed situations, their evidence and their limits usable across product and engineering.
+6. **[Executable invariants](./patterns/executable-invariants.md)** — State the guarantees the business needs and check them across many inputs.
+7. **[Differential verification](./patterns/differential-verification.md)** — Compare old and new behavior on the same inputs, then investigate the differences.
 
 ## Make changes easier to carry out
 
-6. **[Architectural ratchet](./patterns/architectural-ratchet.md)** — Stop new dependency violations while repairing existing ones.
-7. **[Review comment to guardrail](./patterns/review-comment-to-guardrail.md)** — Turn an agreed, detectable mistake into a useful automated check.
-8. **[Capability command](./patterns/capability-command.md)** — Package an investigation so someone else can run it safely.
-9. **[Verified retrieval](./patterns/verified-retrieval.md)** — Check whether a fresh attempt finds the relevant knowledge and uses it within its limits.
-
-10. **[Investigation to skill](./patterns/investigation-to-skill.md)** — Keep a useful investigative method and try it on a different problem.
-11. **[Earned delegation](./patterns/earned-delegation.md)** — Turn repeated supervision into evidence about what the environment needs next.
+8. **[Architectural ratchet](./patterns/architectural-ratchet.md)** — Record existing violations precisely and stop new ones while making room for gradual repair.
+9. **[Review comment to guardrail](./patterns/review-comment-to-guardrail.md)** — Turn one agreed, detectable mistake into a check with a useful explanation.
+10. **[Capability command](./patterns/capability-command.md)** — Package a useful engineering task so someone else can run it safely and understand the result.
+11. **[Verified retrieval](./patterns/verified-retrieval.md)** — Rehearse a task with fresh context and check whether current knowledge changes the plan or result.
+12. **[Investigation to skill](./patterns/investigation-to-skill.md)** — Retain a successful method, then try it on a different task with a different answer.
+13. **[Earned delegation](./patterns/earned-delegation.md)** — Find and repair the missing evidence or safeguard before widening a task's delegation boundary.
+14. **[Capability composition](./patterns/capability-composition.md)** — Combine a few proven capabilities to answer a new question, and count the cost of joining them.
 
 ## Choose what deserves the effort
 
-12. **[Friction to hypothesis](./patterns/friction-to-hypothesis.md)** — Test competing explanations for a recurring difficulty before choosing a repair.
-13. **[Competing prototypes](./patterns/competing-prototypes.md)** — Answer a design question with a few small implementations.
-14. **[Subtraction investigation](./patterns/subtraction-investigation.md)** — Gather the evidence needed to remove a piece of software.
-15. **[Investment retrospective](./patterns/investment-retrospective.md)** — Find out whether a retained tool helped subsequent work.
+15. **[Friction to hypothesis](./patterns/friction-to-hypothesis.md)** — Test competing explanations for recurring friction before choosing a repair.
+16. **[Shorten the learning loop](./patterns/shorten-the-learning-loop.md)** — Reduce the delay around a consequential question while keeping the evidence trustworthy.
+17. **[Competing prototypes](./patterns/competing-prototypes.md)** — Compare a few small implementations against the same question before committing.
+18. **[Subtraction investigation](./patterns/subtraction-investigation.md)** — Trace obligations and usage, rehearse removal, and name the evidence needed to delete.
+19. **[Investment retrospective](./patterns/investment-retrospective.md)** — Follow an investment into later work, including the time spent maintaining and teaching it.
 
 ## Apply a skill
 
@@ -55,7 +58,7 @@ python3 examples/billing_lab.py compare
 
 The lab includes deliberately buggy implementations. Its documentation explains how to run them and why those commands should fail. It is a small teaching example, with no tax, currency conversion, durable storage or concurrent processing.
 
-The separate [evolving billing lab](./examples/evolving-billing/README.md) follows the same failure through restarts, interrupted writes and a replacement implementation. Try a prediction before each command, then inspect which earlier checks still help and which assumptions need revisiting.
+The [evolving billing lab](./examples/evolving-billing/README.md) follows the same failure through restarts, interrupted writes, a replacement implementation and a changed payment-identity rule. Try a prediction before each command, then inspect which earlier checks still help and which assumptions need revisiting.
 
 ## Build and check
 

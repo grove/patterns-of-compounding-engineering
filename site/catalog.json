@@ -16,12 +16,28 @@
     "keywords": "incident observability telemetry metrics traces logs production outage debugging"
   },
   {
+    "slug": "successful-work-investigation",
+    "title": "Successful work investigation",
+    "group": "reproduce",
+    "problem": "The change went well. What made that possible?",
+    "summary": "Examine the information, adjustments and options that helped ordinary work succeed.",
+    "keywords": "success resilience safety adaptation migration operations learning"
+  },
+  {
     "slug": "scenario-builders",
     "title": "Scenario builders",
     "group": "reproduce",
     "problem": "Setting up a useful test takes longer than running it.",
     "summary": "Make meaningful business states cheap to construct, with time and defaults under control.",
     "keywords": "fixture test data seed clock setup"
+  },
+  {
+    "slug": "reusable-domain-scenarios",
+    "title": "Reusable domain scenarios",
+    "group": "reproduce",
+    "problem": "Our tests pass, but the customer situation still makes no sense.",
+    "summary": "Keep reviewed situations, their evidence and their limits usable across product and engineering.",
+    "keywords": "domain customer discovery scenarios product rules assumptions"
   },
   {
     "slug": "executable-invariants",
@@ -88,12 +104,28 @@
     "keywords": "delegation supervision agent autonomy permissions safety evidence review"
   },
   {
+    "slug": "capability-composition",
+    "title": "Capability composition",
+    "group": "change",
+    "problem": "Could the capabilities we already have make this change practical?",
+    "summary": "Combine a few proven capabilities to answer a new question, and count the cost of joining them.",
+    "keywords": "composition capability combination complementarity investment reuse migration"
+  },
+  {
     "slug": "friction-to-hypothesis",
     "title": "Friction to hypothesis",
     "group": "invest",
     "problem": "We keep hitting the same difficulty, but disagree about why.",
     "summary": "Test competing explanations for recurring friction before choosing a repair.",
     "keywords": "learning ai hypothesis experiment evidence review friction investigation"
+  },
+  {
+    "slug": "shorten-the-learning-loop",
+    "title": "Shorten the learning loop",
+    "group": "invest",
+    "problem": "The answer arrives after we have committed to the design.",
+    "summary": "Reduce the delay around a consequential question while keeping the evidence trustworthy.",
+    "keywords": "feedback queue experiment learning delay testing discovery flow"
   },
   {
     "slug": "competing-prototypes",

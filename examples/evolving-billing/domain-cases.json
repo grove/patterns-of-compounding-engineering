@@ -1,0 +1,28 @@
+{
+  "contract": {
+    "status": "synthetic teaching contract, not a real provider contract",
+    "rule": "Within this single-provider, single-invoice exercise, one settled payment_id is credited once even if reported under several event IDs. Distinct payment IDs may contribute to the same invoice.",
+    "assumptions": [
+      "All events describe settled payments for the same invoice.",
+      "Repeated payment IDs have the same positive amount.",
+      "Payment IDs are present and stable within this exercise."
+    ],
+    "excludes": ["refunds", "disputes", "multiple providers", "multiple invoices", "conflicting amounts", "concurrent workers", "existing-data migration"]
+  },
+  "same_payment": {
+    "events": [
+      {"id": "evt_001", "payment_id": "pay_001", "invoice_id": "inv_001", "amount_cents": 2400},
+      {"id": "evt_002", "payment_id": "pay_001", "invoice_id": "inv_001", "amount_cents": 2400}
+    ],
+    "expected": {"paid_cents": 2400, "applied_events": 1}
+  },
+  "installments": {
+    "events": [
+      {"id": "evt_101", "payment_id": "pay_101", "invoice_id": "inv_001", "amount_cents": 1200},
+      {"id": "evt_102", "payment_id": "pay_102", "invoice_id": "inv_001", "amount_cents": 1200}
+    ],
+    "expected_after_first": {"paid_cents": 1200, "applied_events": 1},
+    "expected": {"paid_cents": 2400, "applied_events": 2}
+  },
+  "empty": {"paid_cents": 0, "applied_events": 0}
+}

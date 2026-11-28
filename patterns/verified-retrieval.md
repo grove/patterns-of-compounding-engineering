@@ -79,6 +79,10 @@ An assistant can suggest where a retained check might help by comparing relevant
 
 Ask one receiving team to test applicability during work it already needs to do. Can it find the current rule, adapt the check and explain which assumption changed? A team that decides the check does not fit has still produced a useful answer. Keep that reason with the attempted transfer so the next recommendation does not repeat it.
 
+Prepare the receiver as well as the material. Ask what background knowledge, access and time the task requires. A good replay may still be unusable to someone who has never investigated a transaction boundary. Pair on one case, explain the important terms, then let the receiver attempt a different case independently. Count that teaching and adaptation as part of the transfer cost.
+
+If the source team is still required for every decision, the capability has not fully transferred. A named contact can remain useful, but it should not conceal a permanent queue. Conversely, a receiver may need to change the method because its obligations differ. Agreement with the original team is not the acceptance criterion; a sound decision in the receiving context is.
+
 Record setup and support on both sides. The source team's check may save its own time while creating work for the receiver. Use the existing [capability transfer](https://grove.github.io/compounding-engineering/adoption/patterns.html#capability-transfer) practice to agree on ownership and adaptation. A useful independent application establishes transfer. A claim of compounding still needs evidence that earlier work helped build a later capability.
 
 ## Keep the rehearsal small
@@ -88,6 +92,8 @@ Retain the task, expected observations and the repair beside the knowledge it ex
 If the answer is already obvious from a short README, read it and move on. If the guidance matters so rarely that rehearsing it costs more than reconstructing it, drop the rehearsal. Keep records whose evidence or consequences justify their upkeep, and retire obsolete routes along with obsolete tools.
 
 ## Related patterns and sources
+
+Cohen and Levinthal's [Absorptive Capacity](https://doi.org/10.2307/2393553) explains why existing knowledge affects an organization's ability to recognize and apply new knowledge. It gives a reason to invest in the receiving team's preparation, rather than treating a published document as a completed transfer.
 
 [Every's Compound Engineering guide](https://every.to/guides/compound-engineering) calls for capturing solutions, making them findable and verifying the learning. This collection's proposed pattern turns that last question into an observable handoff; it does not establish a productivity benefit from retrieval alone.
 

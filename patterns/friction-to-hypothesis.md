@@ -44,6 +44,16 @@ The [evolving billing lab](../examples/evolving-billing/README.md#2-ask-the-same
 
 Now watch the next relevant change. Can its author find the replay, run it and explain the remaining limits without the specialist reconstructing the investigation? If the same interruption remains, inspect it. Perhaps the new task concerns two workers, while the replay still uses one. A different question deserves different evidence.
 
+## Challenge the premise
+
+Sometimes the repeated difficulty comes from the rule everyone is trying to satisfy. Suppose every deployment still needs a senior engineer's approval. An assistant could prepare the approval packet faster. First ask what the approval protects, who owns it and whether that reason still applies.
+
+Perhaps it was introduced when releases required a manual data conversion that has since disappeared. Perhaps it now catches a different risk that nobody has documented. Read the original decision and examine recent approvals, including ones where the reviewer intervened. Compare improving compliance, replacing the control and changing the work so the risk no longer arises.
+
+Take the evidence to whoever can change the rule. A team should not quietly bypass a required control because its history is unclear. If the rule changes, update the active instructions and checks together; otherwise people and agents may keep following the old version.
+
+Argyris's [Double Loop Learning in Organizations](https://store.hbr.org/product/double-loop-learning-in-organizations/77502) distinguishes correcting actions within existing governing assumptions from reconsidering those assumptions. Here the practical question is whether to improve the handoff or change the reason it exists. The essay [Getting better at the wrong thing](https://grove.github.io/engineering-that-compounds/essays/getting-better-at-the-wrong-thing.html) follows that question further.
+
 ## Decide what deserves to survive
 
 Keep the cases and result beside the affected code or existing issue. A short record is enough:

@@ -128,6 +128,7 @@ class SiteBuildTests(unittest.TestCase):
             "## Use the task already open\n\nTry one small improvement.\n\n"
             "## Give the method to the next investigator\n\nTry a skill.\n\n"
             "## Make a difficult subsystem replaceable\n\nTry known cases.\n\n"
+            "## Use AI to investigate recurring friction\n\nTest an explanation.\n\n"
             "## Reduce recurring review work\n\nCheck an agreed rule.\n\n"
             "## Delegate one kind of task\n\nKeep the boundary narrow.\n\n"
             "## Choose a problem\n\n[Replay](./patterns/persistent-reproducer.md)\n",

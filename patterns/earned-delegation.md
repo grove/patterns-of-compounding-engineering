@@ -49,6 +49,14 @@ The first deliberately exits 1 after applying the payment twice. The second exit
 
 An agent can conduct this bounded exercise without being authorized to deploy anything. For the next class of change, investigate the real provider contract, durable state, transaction boundaries, crash windows and recovery before expanding scope. The lab cannot settle those questions.
 
+## Investigate a failure before changing the instructions
+
+An agent's failed attempt can reveal a missing capability, but it can also reveal a mistake that a new instruction will not fix. Keep the task, relevant output, tool versions and the intervention that changed the result. Ask an assistant to compare a few such attempts and identify competing explanations, with references to the evidence. Review those explanations before adopting them; [friction to hypothesis](./friction-to-hypothesis.md) gives this step a small scope.
+
+For the payment example, distinguish an agent that never found the replay's limits from one that read them but had no way to test a restart. The first calls for a retrieval repair. The second may justify extending the harness. If the agent changed an expected total to make the check pass, inspect the acceptance process rather than adding another paragraph about careful testing. Keep the reviewed expectation outside the candidate's control.
+
+Try the smallest repair on a different task, including one where the right answer is to stop. Preserve the failure only if it remains useful for that check. A longer instruction file, a quieter agent or fewer requests for help does not establish that delegation improved.
+
 ## Try again without widening the task
 
 Give a teammate or fresh session a comparable task through the normal entry point, with the same permissions and independent evidence. Observe whether the previous intervention is still necessary. Inspect the result and check whether a new error escaped.

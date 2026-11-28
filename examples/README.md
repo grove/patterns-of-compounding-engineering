@@ -54,3 +54,5 @@ Run the lab's tests with `python3 -m unittest discover -s tests -p 'test_billing
 ## Follow the same payment through later changes
 
 [One payment, five changes](./evolving-billing/README.md) takes the retained payment fixture through a restart, interrupted writes and a storage replacement. Predict the result, run the check, then see which earlier evidence can be reused. It ends by checking the replacement without the reference and exposing a requirement that every implementation still misses. The examples use temporary SQLite databases and remain entirely local.
+
+The walkthrough also includes a [proposed learning exercise with an AI assistant](./evolving-billing/README.md#try-the-investigation-with-an-ai-assistant). Use the existing checks to test rival explanations, practice reasoning about failures and examine whether a lesson fits another team's system. The exercise makes no claim about measured learning or productivity gains.

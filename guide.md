@@ -18,7 +18,7 @@ When the underlying work is staying around, jump straight to the pattern closest
 
 - [Reproduce a hard failure](./patterns/persistent-reproducer.md), [instrument a production blind spot](./patterns/incident-to-instrument.md), [build awkward states cheaply](./patterns/scenario-builders.md), [check business guarantees](./patterns/executable-invariants.md), or [compare a replacement against legacy code](./patterns/differential-verification.md).
 - [Contain a dependency mess](./patterns/architectural-ratchet.md), [turn a repeated review catch into a check](./patterns/review-comment-to-guardrail.md), [package an investigation so someone else can run it](./patterns/capability-command.md), or [check whether the next person finds the knowledge you kept](./patterns/verified-retrieval.md).
-- [Test competing designs on real cases](./patterns/competing-prototypes.md), [gather evidence before deleting old code](./patterns/subtraction-investigation.md), or [check whether an earlier tool paid off](./patterns/investment-retrospective.md).
+- [Investigate why a difficulty keeps recurring](./patterns/friction-to-hypothesis.md), [test competing designs on real cases](./patterns/competing-prototypes.md), [gather evidence before deleting old code](./patterns/subtraction-investigation.md), or [check whether an earlier tool paid off](./patterns/investment-retrospective.md).
 
 ## Use the task already open
 
@@ -88,9 +88,21 @@ Capture a repeatable bug as a [persistent reproducer](./patterns/persistent-repr
 
 Stop at the reproducer if there is only one useful case. If old and new implementations agree but the business rule is unsettled, resolve that rule before expanding the comparator.
 
+### Use AI to investigate recurring friction
+
+Suppose review repeatedly stops at the same payment question. Ask an assistant to examine a few relevant changes, preserve links to the passages behind its grouping, and suggest explanations that would lead to different repairs. Include changes where review went smoothly. You might find that the delivery contract is hard to discover, the test setup is expensive, or the business rule remains undecided. [Friction to hypothesis](./patterns/friction-to-hypothesis.md) helps choose a small investigation that can tell those situations apart.
+
+Keep the work inside the current task. A missing route calls for [verified retrieval](./patterns/verified-retrieval.md); a missing replay may justify a [persistent reproducer](./patterns/persistent-reproducer.md). A disputed payment rule needs its owner. Ask AI to help gather evidence, draft a check or find a counterexample, while keeping the expected behavior grounded in the reviewed contract.
+
+The next related change tells you whether the repair helped. Count review, rework, false matches and upkeep as well as preparation time. If this way of investigating becomes a routine, review it with an [investment retrospective](./patterns/investment-retrospective.md#review-the-way-you-look-for-improvements). Stop generating suggestions that nobody can use.
+
+A colleague can rehearse the same case to learn how the system works. Another team can try it when the conditions fit. Neither is a mandatory step, and either may reveal that the proposed repair is unnecessary. The [learning exercise in the evolving lab](./examples/evolving-billing/README.md#try-the-investigation-with-an-ai-assistant) gives you a small case to try; [Compounding learning](https://grove.github.io/engineering-that-compounds/essays/compounding-learning.html) develops the argument behind it.
+
 ### Reduce recurring review work
 
 Turn an agreed, detectable correction into a [review comment to guardrail](./patterns/review-comment-to-guardrail.md). If legacy violations prevent adoption, an [architectural ratchet](./patterns/architectural-ratchet.md) can allow cleanup without accepting new violations. A [capability command](./patterns/capability-command.md) is useful when running the check still needs hidden setup.
+
+If the comments look similar but the proposed fixes keep changing, first check whether they share a cause with [friction to hypothesis](./patterns/friction-to-hypothesis.md). Repeated wording is insufficient grounds for a new rule.
 
 Keep the existing test command if it already works. Leave disputed design choices with reviewers; a noisy rule can cost more attention than the original comment. Revisit the combined burden with an [investment retrospective](./patterns/investment-retrospective.md).
 

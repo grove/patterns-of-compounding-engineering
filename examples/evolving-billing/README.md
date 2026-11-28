@@ -117,6 +117,32 @@ It fails with 4,800 paid. Every implementation here deduplicates event IDs, and 
 
 `identity-gap` is deliberately outside `verify`'s five event-ID cases. It is a new requirement, not a secretly failing case in the promised contract. The runner prints that scope. This is why the next change must revisit what a green check establishes.
 
+## Try the investigation with an AI assistant
+
+The lab can also support a small learning exercise. This is a proposed use of the existing checks, not a report that AI improved anyone's understanding or delivery time. Start with one question: why can a green duplicate-delivery replay still miss a lost or repeated payment?
+
+Before asking for an explanation, predict what a restart, an interrupted transaction and a second event ID might change. Then ask an assistant to inspect the fixture and the implementations, suggest competing explanations, and identify a check that distinguishes each one. Require it to cite the relevant source and to separate the event-ID contract from business payment identity. Keep the fixture's expectations fixed during this exercise.
+
+Run these commands separately from the repository root:
+
+```sh
+python3 examples/evolving-billing/replay.py run --case restart --implementation memory
+python3 examples/evolving-billing/replay.py run --case restart --implementation split
+python3 examples/evolving-billing/replay.py run --case after-record --implementation split
+python3 examples/evolving-billing/replay.py run --case after-record --implementation atomic
+python3 examples/evolving-billing/replay.py run --case identity-gap --implementation ledger
+```
+
+The first command exits 1 because the worker forgets the event ID; the second exits 0 because the ID survives. The third exits 1 because a committed receipt can outlive a missing balance update; the fourth exits 0 because those writes share a transaction. The fifth exits 1 because a different event ID is treated as a different payment. That last failure needs a clarified identity rule before a correction can be specified.
+
+Explain those results yourself before reading the assistant's explanation. Ask it to challenge one of your assumptions or propose a nearby case these checks cannot settle. Check that proposal against the code and the stated limits. A plausible account of a concurrent-worker failure is still a hypothesis: this runner does not exercise concurrency.
+
+For another engineer, turn one retained case into a prediction exercise. Hide the answer while they decide what survives a restart or interruption, then compare their explanation with the observed checkpoints. On a later, unfamiliar case, look for whether they identify the relevant contract and missing evidence. Repeating the assistant's explanation of the original case is a weaker check of understanding.
+
+To try transfer, let a neighboring team examine whether its own delivery contract has the same assumption. It may use a different key, have different transaction boundaries or rely on an external side effect. Ask it to name one applicable check and one reason the lab's design would not carry over unchanged. This is a proposed adaptation exercise; the repository contains no results from another team.
+
+Keep only useful corrections to the question, source links or exercise. Count the time spent verifying the assistant's suggestions and explaining false leads. If it adds little, use the replay without it. [Friction to hypothesis](../../patterns/friction-to-hypothesis.md) helps choose the investigation, [verified retrieval](../../patterns/verified-retrieval.md) checks the handoff, and [investment retrospective](../../patterns/investment-retrospective.md#review-the-way-you-look-for-improvements) asks whether the method earned its upkeep.
+
 ## What carried forward, and what it cost
 
 | Earlier work reused | New capability | Additional work still required |

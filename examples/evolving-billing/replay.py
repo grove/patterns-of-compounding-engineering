@@ -130,20 +130,20 @@ class Store:
         return {"paid_cents": paid, "applied_events": applied}
 
 
-def run_case(name, implementation="atomic"):
-    steps = cases()[name]
+def run_steps(name, steps, implementation, store_type=Store):
+    """Run reviewed steps against a store with the same small delivery interface."""
     observations = []
     # Each run starts empty and removes its own database when finished.
     with TemporaryDirectory(prefix="evolving-billing-") as directory:
         database = Path(directory) / "payments.sqlite"
-        store = Store(database, implementation)
+        store = store_type(database, implementation)
         try:
             for index, step in enumerate(steps, 1):
                 label = "restart"
                 interruption = None
                 if step.action == "restart":
                     store.close()
-                    store = Store(database, implementation)
+                    store = store_type(database, implementation)
                 else:
                     label = f"deliver {step.event['id']}"
                     try:
@@ -152,7 +152,7 @@ def run_case(name, implementation="atomic"):
                         interruption = str(error)
                         label += f"; interrupted {error}"
                         store.close()
-                        store = Store(database, implementation)
+                        store = store_type(database, implementation)
                 observed = store.snapshot()
                 observations.append({"step": index, "action": label,
                                      "expected": deepcopy(step.expected),
@@ -166,6 +166,10 @@ def run_case(name, implementation="atomic"):
     return {"case": name, "implementation": implementation,
             "observations": observations,
             "matches": all(item["matches"] for item in observations)}
+
+
+def run_case(name, implementation="atomic"):
+    return run_steps(name, cases()[name], implementation)
 
 
 def verify(implementation="atomic"):

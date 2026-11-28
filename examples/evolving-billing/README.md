@@ -1,10 +1,10 @@
-# One payment, five changes
+# One payment, changing assumptions
 
-*Follow a retained failure into recovery checks and a simpler storage design.*
+*Follow a retained failure into recovery checks, a simpler store and a new business rule.*
 
 The duplicate-payment fix works. Then somebody asks what happens when the worker restarts. Later, the storage design changes. Do you have to build the evidence from scratch each time?
 
-This walkthrough reuses the [original payment fixture](../scenarios/duplicate-payment.json) through those changes. You will see a green check become insufficient, extend it to expose another failure, and carry the resulting checks into a replacement. Each step includes a prediction to make before running the code.
+This walkthrough reuses the [original payment fixture](../scenarios/duplicate-payment.json) through those changes. You will see a green check become insufficient, extend it to expose another failure, and carry the resulting checks into a replacement. The final extension changes the meaning of a payment and tests which parts of the earlier work remain useful. Each step includes a prediction to make before running the code.
 
 Use Python 3.10 or later with its standard `sqlite3` module. If you do not already have the repository, get a local copy:
 
@@ -117,6 +117,44 @@ It fails with 4,800 paid. Every implementation here deduplicates event IDs, and 
 
 `identity-gap` is deliberately outside `verify`'s five event-ID cases. It is a new requirement, not a secretly failing case in the promised contract. The runner prints that scope. This is why the next change must revisit what a green check establishes.
 
+## 6. Change the identity rule
+
+For the next exercise, we supply a **fictional contract** in [domain-cases.json](./domain-cases.json): one settled payment has one stable `payment_id`, but may arrive under different event IDs. Two different payments can contribute to the same invoice. All events belong to one provider and one invoice, and repeated payment IDs carry the same amount.
+
+In a real integration, these statements would need evidence from the provider and the domain owner. Here they are stipulated teaching assumptions. The accompanying [domain runner](./domain.py) tests code against them; it cannot verify the provider's actual behavior.
+
+**Predict:** which identifier can distinguish a repeated notification from another installment? Try each choice:
+
+```sh
+python3 examples/evolving-billing/domain.py --identity event
+python3 examples/evolving-billing/domain.py --identity invoice
+python3 examples/evolving-billing/domain.py --identity payment
+```
+
+The event-key version exits 1: two notifications of one payment record 4,800 instead of 2,400. The invoice-key version also exits 1: it handles that duplicate but drops the second legitimate installment, leaving 1,200 instead of 2,400. The payment-key version exits 0 on the five stated cases.
+
+| Case | Independent expectation |
+| --- | --- |
+| `same-payment` | Two event IDs for one payment produce 2,400 paid and one accepted payment |
+| `installments` | Two payment IDs for one invoice produce 2,400 paid and two accepted payments |
+| `restart` | A notification with another event ID remains a duplicate after reopening storage |
+| `before-commit` | The interrupted receipt rolls back; the later notification records the payment once |
+| `after-commit` | A committed receipt survives the interruption; the later notification adds nothing |
+
+The new code adapts the ledger's key. It reuses the earlier delivery interface, transaction behavior, restart action, fault injection and checkpoint runner. It adds domain fixtures and expectations rather than deriving them from the chosen key. The inherited observation name `applied_events` now counts accepted payment records; it does not count every notification received.
+
+This also shows where reuse stops. The script always starts with an empty database. Changing what an existing receipt column means requires a data migration strategy that the exercise does not provide. Conflicting amounts, refunds, multiple providers, multiple invoices and concurrency are outside the stated contract. A missing payment ID produces an error rather than a guessed identity.
+
+## 7. Use the case to question the next change
+
+These are human exercises, with no recorded results or automatic score:
+
+- **A policy changes.** Suppose the next provider uses payment IDs unique only within an account. Identify the assumption that would fail, the evidence needed to establish the new scope and the stored data affected. Do not change the expected result merely to obtain a green run.
+- **Another team adopts the method.** Give it the domain case and the normal repository entry point. Ask what fits its service, what background knowledge is missing and which check it would need to add. Count adaptation and teaching. Copying the script is not enough to establish independent use.
+- **An AI model changes.** Give two assistants the same bounded investigation and independently maintained acceptance cases. Inspect whether they find the contract, reject invoice identity and notice the migration gap. Keep model versions, available context and review effort visible. These cases can reject particular mistakes; they cannot rank models generally or establish safe deployment.
+
+The concrete opportunity is a future reconciliation check: reviewed payment identities plus a restartable ledger might make discrepancies easier to investigate. Build it only when that question matters. Record which pieces help and what new evidence is needed instead of treating this walkthrough as proof of organizational compounding.
+
 ## Try the investigation with an AI assistant
 
 The lab can also support a small learning exercise. This is a proposed use of the existing checks, not a report that AI improved anyone's understanding or delivery time. Start with one question: why can a green duplicate-delivery replay still miss a lost or repeated payment?
@@ -151,8 +189,9 @@ Keep only useful corrections to the question, source links or exercise. Count th
 | Replay and restart handling | Interruption checks | Fault locations and expectations before and after commit |
 | Those cases and observation format | Comparison of implementations | A replacement and checks at every checkpoint |
 | Expected outcomes independent of the reference | Acceptance after replacement | Running the cases without the old implementation |
+| Recovery runner and ledger interface | Verification of a changed identity rule | A reviewed domain contract, independent counterexample and key adapter |
 
-You can inspect these connections in `cases()`, `run_case()`, `compare()` and `verify()` in the [source](./replay.py). The cases are deliberately small enough to read alongside the implementation. Keep them that way: refund rules, concurrent workers, external side effects and real process crashes need further work and may need a different harness.
+You can inspect these connections in `cases()`, `run_steps()`, `compare()` and `verify()` in the [replay source](./replay.py), then `domain_cases()` and `KeyedLedger` in the [domain extension](./domain.py). The cases are deliberately small enough to read alongside the implementation. Keep them that way: refund rules, concurrent workers, external side effects and real process crashes need further work and may need a different harness.
 
 This is an executable teaching example assembled as one exercise. It demonstrates reuse and failure detection. It does **not** measure whether a team builds later capabilities more cheaply, whether the investment pays back its upkeep, or whether the effect continues. The [measurement essay](https://grove.github.io/engineering-that-compounds/essays/measuring-the-capacity-for-change.html) explains how to investigate those claims.
 

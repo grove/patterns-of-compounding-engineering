@@ -10,6 +10,8 @@ This guide is about making that call and shaping the things you keep so a teamma
 
 Pick a real task that recently burned an afternoon. Maybe the last two billing bugs forced someone to rebuild the same broken subscription state by hand. Maybe a 2 a.m. timeout left on-call grepping raw container logs for an hour. Maybe reviewers keep leaving the same comment about billing handlers importing the payment SDK directly. Write down what happened, where the time went, and who got stuck.
 
+Successful work is another starting point. If a migration went smoothly because someone spotted a problem and adjusted the plan, a [successful work investigation](./patterns/successful-work-investigation.md) can reveal what made that possible. You need not wait for an outage to learn how the team operates.
+
 "We need better developer experience" can justify almost anything and proves nothing later. "A new engineer cannot reproduce the duplicate-payment bug without pulling the original author into a call" gives you something concrete to test against.
 
 Before you automate or wrap a recurring chore, check whether you can just eliminate it. If someone runs a repair script every Monday because a webhook handler drops idempotency keys, fix the handler instead of putting a nicer CLI on the repair script.
@@ -19,6 +21,7 @@ When the underlying work is staying around, jump straight to the pattern closest
 - [Reproduce a hard failure](./patterns/persistent-reproducer.md), [instrument a production blind spot](./patterns/incident-to-instrument.md), [build awkward states cheaply](./patterns/scenario-builders.md), [check business guarantees](./patterns/executable-invariants.md), or [compare a replacement against legacy code](./patterns/differential-verification.md).
 - [Contain a dependency mess](./patterns/architectural-ratchet.md), [turn a repeated review catch into a check](./patterns/review-comment-to-guardrail.md), [package an investigation so someone else can run it](./patterns/capability-command.md), or [check whether the next person finds the knowledge you kept](./patterns/verified-retrieval.md).
 - [Investigate why a difficulty keeps recurring](./patterns/friction-to-hypothesis.md), [test competing designs on real cases](./patterns/competing-prototypes.md), [gather evidence before deleting old code](./patterns/subtraction-investigation.md), or [check whether an earlier tool paid off](./patterns/investment-retrospective.md).
+- [Combine existing capabilities for a new task](./patterns/capability-composition.md), [get useful feedback sooner](./patterns/shorten-the-learning-loop.md), or [keep customer situations usable across product and engineering](./patterns/reusable-domain-scenarios.md).
 
 ## Use the task already open
 
@@ -52,7 +55,7 @@ Suppose the next change proposes adding another worker. Give a teammate or fresh
 
 The PR note can stay short: *Kept the duplicate-delivery case and its expectation. Linked it from the handler docs. Revisit when webhook processing gains another worker or persistent storage.* That sample note describes adapting the lab to an application; the lab itself remains a single-process teaching tool.
 
-To follow this same payment into the next change, try [One payment, five changes](./examples/evolving-billing/README.md). It carries the retained case through restarts, interrupted writes and a replacement, then exposes a requirement the stronger checks still miss.
+To follow this same payment into the next change, try [One payment, changing assumptions](./examples/evolving-billing/README.md). It carries the retained case through restarts, interrupted writes and a replacement, then changes the identity rule and checks which earlier capabilities remain useful.
 
 ## Give the method to the next investigator
 
@@ -70,6 +73,7 @@ Keeping more scripts and tests does not automatically make a team faster. Look a
 | --- | --- |
 | Accumulation | A reproducer is available in the repository; nobody has needed it again yet |
 | Recurring return | A replay command that saves an hour whenever a payment bug comes back |
+| Complementarity | A scenario builder and an independent invariant check answer more together than either can alone |
 | Compounding | A scenario builder written for one incident that later makes invariant tests and a migration comparator cheap to build |
 | Failed investment | A helper's setup and upkeep cost more than the benefit observed across its intended uses |
 | Negative compounding | Brittle checks delay repairs; engineers bypass them, more faults accumulate, and the next repair becomes harder still |
@@ -80,7 +84,19 @@ Recurring returns are completely fine; plenty of useful tools stop there and sti
 
 ## Combine patterns when the work calls for it
 
-These are possible routes through a larger change. Start where the evidence is missing, and add the next capability only when the task needs it.
+These are possible routes through a larger change. Start where the evidence is missing, and add the next capability only when the task needs it. [Capability composition](./patterns/capability-composition.md) gives a small exercise: name the work you want to make possible, try a few relevant capabilities together, and identify what still needs building. A capability means someone can reliably do the job under stated conditions; possessing the tools is only part of it.
+
+### Keep the problem open to question
+
+Before improving a recurring process, ask whether its purpose still holds. If every deployment needs a senior engineer's approval, investigate what the approval protects before automating its paperwork. [Challenge the premise](./patterns/friction-to-hypothesis.md#challenge-the-premise) covers how to examine the rule with its owner.
+
+Make room for a different kind of investment too. A small prototype may reveal that the integration you keep repairing could disappear under another design. A recovery rehearsal may preserve understanding that routine automation no longer exercises. Improving today's work, exploring alternatives and preserving the ability to respond are all legitimate uses of engineering effort. Name which one you are trying and judge it accordingly.
+
+### Carry domain knowledge into the next question
+
+Use [reusable domain scenarios](./patterns/reusable-domain-scenarios.md) when product, support and engineering keep reconstructing the same situation. Keep the observed case, the reviewed rule and the unresolved question distinguishable. Feed that case into [scenario builders](./patterns/scenario-builders.md) only after its expectation is understood.
+
+If the next uncertainty concerns customer behavior, return to customers. If it concerns implementation, use a small check. [Shorten the learning loop](./patterns/shorten-the-learning-loop.md) helps choose evidence that can arrive while the decision is still open.
 
 ### Make a difficult subsystem replaceable
 
@@ -181,7 +197,7 @@ Budget, upkeep cap, review trigger and stopping condition:
 After use: result, costs, new constraint, next allocation:
 ```
 
-Use an [investment retrospective](./patterns/investment-retrospective.md) to revisit it. Do not require this note for every small fix. Constraints can be transient, external or closely coupled; not every recurring irritation is the limit, and not every valuable investment must improve current throughput. Required security, safety and reliability work may protect outcomes instead.
+Use an [investment retrospective](./patterns/investment-retrospective.md) to revisit it. The [investment canvas](https://grove.github.io/compounding-engineering/adoption/investment-canvas.html) provides an editable version for a team discussion. Do not require a canvas for every small fix. Constraints can be transient, external or closely coupled; not every recurring irritation is the limit, and not every valuable investment must improve current throughput. Required security, safety and reliability work may protect outcomes instead.
 
 ## Choosing between competing investments
 

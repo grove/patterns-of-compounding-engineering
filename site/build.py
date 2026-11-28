@@ -27,7 +27,7 @@ SOURCE_REF = quote(os.environ.get('SITE_SOURCE_REF', 'main'), safe='/')
 LAB_SOURCE = 'examples/evolving-billing/README.md'
 LAB_PAGE = 'examples/evolving-billing/index.html'
 GROUPS = {
-    'reproduce': ('Understand failures and check behavior', 'Keep the evidence that makes the next investigation easier.'),
+    'reproduce': ('Understand the work and check behavior', 'Keep the evidence that makes the next investigation easier.'),
     'change': ('Make changes easier to carry out', 'Remove recurring obstacles without requiring a rewrite.'),
     'invest': ('Choose what deserves the effort', 'Try alternatives, remove baggage and check whether earlier work helped.'),
 }
@@ -218,12 +218,12 @@ def home(entries) -> str:
     body = f'''<main id="main">
     <section class="hero content-width" aria-labelledby="page-title">
       <div><p class="eyebrow">The practical companion to Engineering that compounds</p><h1 id="page-title">Patterns of<br>compounding<br><em>engineering.</em></h1></div>
-      <div class="hero-note"><p class="hero-lede">A field guide for the work<br>that keeps coming back.</p><p>A difficult bug, a risky migration, the same comment in every review. {len(entries)} patterns for turning everyday engineering work into capabilities your team can use again.</p><div class="hero-links"><a class="button" href="guide.html#use-the-task-already-open">Start with your next task</a><a href="#patterns">Find a pattern</a><a href="guide.html#give-the-method-to-the-next-investigator">Try a skill</a></div></div>
+      <div class="hero-note"><p class="hero-lede">A field guide for the work<br>that keeps coming back.</p><p>A difficult bug, a successful migration, a customer case the tests missed. {len(entries)} patterns for turning everyday engineering work into capabilities your team can use again.</p><div class="hero-links"><a class="button" href="guide.html#use-the-task-already-open">Start with your next task</a><a href="#patterns">Find a pattern</a><a href="guide.html#give-the-method-to-the-next-investigator">Try a skill</a></div></div>
     </section>
     <section class="workbench content-width" aria-labelledby="workbench-title"><div><p class="eyebrow">A worked example you can run</p><h2 id="workbench-title">One invoice. Two deliveries of the same event.</h2><p>Reproduce the double payment, check the fix, then compare two invoice calculators. The examples use Python's standard library and synthetic data.</p><a href="{REPO}/tree/{SOURCE_REF}/examples">Open the billing lab</a></div><div class="terminal"><span class="terminal-label">From the repository root</span><pre tabindex="0"><code>python3 examples/billing_lab.py replay
 python3 examples/billing_lab.py verify
 python3 examples/billing_lab.py compare</code></pre><p>Includes a failing example and its correction.</p></div></section>
-    <p class="lab-followup content-width">Ready for the next change? <a href="{LAB_PAGE}">Follow the replay through restarts, interrupted writes and a replacement implementation.</a> The evolving lab reuses the same evidence and shows where it stops being enough.</p>
+    <p class="lab-followup content-width">Ready for the next change? <a href="{LAB_PAGE}">Follow the replay through restarts, interrupted writes, a replacement and a changed business rule.</a> The evolving lab reuses the same evidence and shows where it stops being enough.</p>
     <section class="catalog content-width" id="patterns" aria-labelledby="catalog-title"><header class="catalog-heading"><div><p class="eyebrow">The pattern catalogue</p><h2 id="catalog-title">What is slowing the team down?</h2></div><p>Start with a problem you have.<br>You don't need to adopt the whole collection.</p></header>
       <p>Unsure why the same difficulty keeps returning? <a href="guide.html#use-ai-to-investigate-recurring-friction">Use AI to help investigate the cause before choosing a repair.</a></p>
       <nav class="pattern-routes" aria-label="Combine patterns for a larger task">
@@ -231,7 +231,7 @@ python3 examples/billing_lab.py compare</code></pre><p>Includes a failing exampl
         <a href="guide.html#reduce-recurring-review-work"><strong>Reduce recurring review work</strong><span>Automate an agreed correction. Keep judgment calls with reviewers.</span></a>
         <a href="guide.html#delegate-one-kind-of-task"><strong>Delegate one kind of task</strong><span>Make evidence and methods usable by someone else. Expand scope only after comparable work holds up.</span></a>
       </nav>
-      <div class="catalog-tools" hidden><div class="filter-buttons" role="group" aria-label="Filter patterns"><button type="button" data-filter="all" aria-pressed="true">All patterns</button><button type="button" data-filter="reproduce" aria-pressed="false">Failures &amp; evidence</button><button type="button" data-filter="change" aria-pressed="false">Changes &amp; tools</button><button type="button" data-filter="invest" aria-pressed="false">Decisions &amp; upkeep</button></div><div class="search-field"><label for="pattern-search">Search patterns</label><input id="pattern-search" type="search" placeholder="Try migrations or review" autocomplete="off"></div></div>
+      <div class="catalog-tools" hidden><div class="filter-buttons" role="group" aria-label="Filter patterns"><button type="button" data-filter="all" aria-pressed="true">All patterns</button><button type="button" data-filter="reproduce" aria-pressed="false">Work &amp; evidence</button><button type="button" data-filter="change" aria-pressed="false">Changes &amp; tools</button><button type="button" data-filter="invest" aria-pressed="false">Decisions &amp; upkeep</button></div><div class="search-field"><label for="pattern-search">Search patterns</label><input id="pattern-search" type="search" placeholder="Try migrations or review" autocomplete="off"></div></div>
       <p id="filter-status" class="filter-status" role="status" aria-live="polite" hidden></p>
       {''.join(groups)}
       <p id="no-results" class="no-results" hidden>No patterns match those words. Try a broader term or choose All patterns.</p>

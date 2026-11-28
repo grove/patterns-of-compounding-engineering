@@ -14,6 +14,8 @@ Before automating a rule, write down one case that should fail and one nearby ca
 
 Also check that the compliant path actually works. If `src/payments/client.js` lacks an operation a new feature needs, blocking direct SDK imports turns every pull request into an argument over `eslint-disable` comments. Fix the adapter or narrow the rule first.
 
+If an assistant has grouped recurring comments for you, inspect their source changes before accepting a proposed rule. The same wording may describe an unavailable adapter operation, a missed convention or a disputed boundary. [Friction to hypothesis](./friction-to-hypothesis.md) helps distinguish those explanations before you automate the correction.
+
 ## Use a built-in rule before writing a plugin
 
 For this import boundary, ESLint already ships [no-restricted-imports](https://eslint.org/docs/latest/rules/no-restricted-imports) with custom messages. You do not need a custom AST plugin.

@@ -73,6 +73,14 @@ Where a rule can be enforced, put it in a check and link the explanation from th
 
 After a repair, try a fresh participant or session. Keep the task and ordinary entry point comparable, record any changes in tools or context, and see whether the earlier failure disappears. Then vary the task: a change to invoice credit arithmetic should lead to the calculation contract, not a ritual replay of the payment webhook. One successful run shows that a route can work. The next real change is where you find out whether it helps without coaching.
 
+## Try the lesson in another team's context
+
+An assistant can suggest where a retained check might help by comparing relevant code, contracts or incident records that it is permitted to read. Keep the suggested match attached to its evidence and conditions. Finding the words “duplicate payment” in two repositories does not establish that they use the same delivery contract.
+
+Ask one receiving team to test applicability during work it already needs to do. Can it find the current rule, adapt the check and explain which assumption changed? A team that decides the check does not fit has still produced a useful answer. Keep that reason with the attempted transfer so the next recommendation does not repeat it.
+
+Record setup and support on both sides. The source team's check may save its own time while creating work for the receiver. Use the existing [capability transfer](https://grove.github.io/compounding-engineering/adoption/patterns.html#capability-transfer) practice to agree on ownership and adaptation. A useful independent application establishes transfer. A claim of compounding still needs evidence that earlier work helped build a later capability.
+
 ## Keep the rehearsal small
 
 Retain the task, expected observations and the repair beside the knowledge it exercises. Revisit after a relevant decision changes, the entry point moves, or a real user misses the guidance again. Avoid a growing suite of prompts that insists on particular wording or exact file-opening sequences; a different route to sound evidence is fine.

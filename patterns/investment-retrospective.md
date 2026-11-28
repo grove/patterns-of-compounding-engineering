@@ -83,6 +83,16 @@ Just as often, the honest call is deletion. Imagine a second hypothetical bet fr
 
 Leave a few sentences next to the tool or in the issue: the changes you inspected, the main cost, the call you made, and what should trigger another look. Skip building a separate reporting system nobody reads.
 
+## Review the way you look for improvements
+
+The investment may be the learning workflow itself. Suppose a team uses an assistant to review recent pull requests and suggest missing checks. Before making it a weekly job, compare a few investigations with the team's ordinary review of the same kind of work. Keep the acceptance standard steady and note differences in tasks, people, tools and available context. A small trial can guide a decision; it will not establish a general productivity effect.
+
+Inspect suggestions that were rejected as well as those acted on. Did the assistant find evidence someone would otherwise have missed? Did its summary merge unrelated failures? How long did people spend opening sources, correcting explanations and dismissing false matches? Sample the original changes for important omissions; a tidy list of successful suggestions hides what the assistant never noticed.
+
+Trace an accepted suggestion into later work before claiming a return. If a new recovery check helped the next payment change, record that benefit separately from the cost of finding the opportunity. The check may deserve to stay even if the automated review process was too expensive. An improved investigation method may, in turn, make the next useful check easier to develop; that further claim needs its own evidence.
+
+Choose a small revision to the method: narrow the input, ask for rival explanations, improve source references, reduce its frequency or stop running it. Keep the ordinary retrospective if it works better. [Friction to hypothesis](./friction-to-hypothesis.md) describes a bounded first attempt; the essay [Compounding learning](https://grove.github.io/engineering-that-compounds/essays/compounding-learning.html) examines how these investigations can improve with use.
+
 ## Zoom out to the whole portfolio
 
 Auditing one artifact at a time has a real blind spot: ten tools, custom linters, and custom alerts that each look defensible alone can still add up to slow CI, brittle schema changes, noisy dashboards, and a repository newcomers are afraid to touch.

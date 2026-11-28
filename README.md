@@ -4,13 +4,15 @@
 
 A team fixes a duplicate payment, replaces a calculation, or removes an old export. Some of that work can make the next change easier: a reproducible failure, a trusted comparison, a way to find the remaining consumers. Keeping those things has a cost. This guide is about choosing what is worth keeping and making it usable by someone else.
 
-The collection follows [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/). It puts their arguments to work through fourteen patterns, with examples, adoption steps, limits and sources.
+The collection follows [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/). It puts their arguments to work through fifteen patterns, with examples, adoption steps, limits and sources.
 
 **Website address:** [grove.github.io/patterns-of-compounding-engineering](https://grove.github.io/patterns-of-compounding-engineering/)
 
 Have a task open already? Start with [a small loop for everyday work](./guide.md#use-the-task-already-open), then [walk a duplicate-payment fix through it](./guide.md#walk-one-fix-through-the-loop). For a particular recurring problem, choose a pattern below.
 
 Working toward a larger change? See how the patterns can help you [replace a difficult subsystem](./guide.md#make-a-difficult-subsystem-replaceable), [reduce recurring review work](./guide.md#reduce-recurring-review-work), or [delegate one kind of task](./guide.md#delegate-one-kind-of-task). Each route explains when to stop adding machinery. To choose an investment, try [the tenfold exercise](./guide.md#use-the-tenfold-ambition-to-choose-the-next-investment): use the Theory of Constraints to identify what limits a worthwhile outcome before deciding which pattern deserves the effort.
+
+If the same difficulty keeps returning, [use AI to help investigate why](./guide.md#use-ai-to-investigate-recurring-friction). Follow one question from the original evidence to a small experiment, then check whether later work benefits. The existing patterns cover retaining, teaching and transferring what proves useful.
 
 ## Understand failures and check behavior
 
@@ -32,9 +34,10 @@ Working toward a larger change? See how the patterns can help you [replace a dif
 
 ## Choose what deserves the effort
 
-12. **[Competing prototypes](./patterns/competing-prototypes.md)** — Answer a design question with a few small implementations.
-13. **[Subtraction investigation](./patterns/subtraction-investigation.md)** — Gather the evidence needed to remove a piece of software.
-14. **[Investment retrospective](./patterns/investment-retrospective.md)** — Find out whether a retained tool helped subsequent work.
+12. **[Friction to hypothesis](./patterns/friction-to-hypothesis.md)** — Test competing explanations for a recurring difficulty before choosing a repair.
+13. **[Competing prototypes](./patterns/competing-prototypes.md)** — Answer a design question with a few small implementations.
+14. **[Subtraction investigation](./patterns/subtraction-investigation.md)** — Gather the evidence needed to remove a piece of software.
+15. **[Investment retrospective](./patterns/investment-retrospective.md)** — Find out whether a retained tool helped subsequent work.
 
 ## Apply a skill
 

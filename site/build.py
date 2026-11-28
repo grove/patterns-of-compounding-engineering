@@ -225,6 +225,7 @@ python3 examples/billing_lab.py verify
 python3 examples/billing_lab.py compare</code></pre><p>Includes a failing example and its correction.</p></div></section>
     <p class="lab-followup content-width">Ready for the next change? <a href="{LAB_PAGE}">Follow the replay through restarts, interrupted writes and a replacement implementation.</a> The evolving lab reuses the same evidence and shows where it stops being enough.</p>
     <section class="catalog content-width" id="patterns" aria-labelledby="catalog-title"><header class="catalog-heading"><div><p class="eyebrow">The pattern catalogue</p><h2 id="catalog-title">What is slowing the team down?</h2></div><p>Start with a problem you have.<br>You don't need to adopt the whole collection.</p></header>
+      <p>Unsure why the same difficulty keeps returning? <a href="guide.html#use-ai-to-investigate-recurring-friction">Use AI to help investigate the cause before choosing a repair.</a></p>
       <nav class="pattern-routes" aria-label="Combine patterns for a larger task">
         <a href="guide.html#make-a-difficult-subsystem-replaceable"><strong>Replace a difficult subsystem</strong><span>Reuse known failures to check a replacement. Settle unclear business rules before growing the harness.</span></a>
         <a href="guide.html#reduce-recurring-review-work"><strong>Reduce recurring review work</strong><span>Automate an agreed correction. Keep judgment calls with reviewers.</span></a>

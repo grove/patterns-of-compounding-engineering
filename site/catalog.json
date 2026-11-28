@@ -88,6 +88,14 @@
     "keywords": "delegation supervision agent autonomy permissions safety evidence review"
   },
   {
+    "slug": "friction-to-hypothesis",
+    "title": "Friction to hypothesis",
+    "group": "invest",
+    "problem": "We keep hitting the same difficulty, but disagree about why.",
+    "summary": "Test competing explanations for recurring friction before choosing a repair.",
+    "keywords": "learning ai hypothesis experiment evidence review friction investigation"
+  },
+  {
     "slug": "competing-prototypes",
     "title": "Competing prototypes",
     "group": "invest",

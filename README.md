@@ -4,7 +4,7 @@
 
 A team fixes a duplicate payment, replaces a calculation, or removes an old export. Some of that work can make the next change easier: a reproducible failure, a trusted comparison, a way to find the remaining consumers. Keeping those things has a cost. This guide is about choosing what is worth keeping and making it usable by someone else.
 
-The collection follows [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/). It puts their arguments to work through nineteen patterns, with examples, adoption steps, limits and sources.
+The collection follows [Software that improves with age](https://grove.github.io/software-that-improves-with-age/) and [Engineering that compounds](https://grove.github.io/engineering-that-compounds/). It puts their arguments to work through practical patterns, with examples, adoption steps, limits and sources.
 
 **Website address:** [grove.github.io/patterns-of-compounding-engineering](https://grove.github.io/patterns-of-compounding-engineering/)
 
@@ -13,6 +13,8 @@ Have a task open already? Start with [a small loop for everyday work](./guide.md
 Working toward a larger change? See how the patterns can help you [replace a difficult subsystem](./guide.md#make-a-difficult-subsystem-replaceable), [reduce recurring review work](./guide.md#reduce-recurring-review-work), or [delegate one kind of task](./guide.md#delegate-one-kind-of-task). Each route explains when to stop adding machinery. To choose an investment, try [the tenfold exercise](./guide.md#use-the-tenfold-ambition-to-choose-the-next-investment): use the Theory of Constraints to identify what limits a worthwhile outcome before deciding which pattern deserves the effort.
 
 If the same difficulty keeps returning, [use AI to help investigate why](./guide.md#use-ai-to-investigate-recurring-friction). Follow one question from the original evidence to a small experiment, then check whether later work benefits. Start with [capability composition](./patterns/capability-composition.md) when existing checks might make a new kind of work practical. The [investment canvas](https://grove.github.io/compounding-engineering/adoption/investment-canvas.html) helps a team choose one bounded attempt.
+
+For a change to the workflow itself, [investigate a recurring intervention](./patterns/recurring-intervention.md) or [retire a workaround](./patterns/retire-the-workaround.md) after its original constraint has gone. [Paths towards 10×](https://grove.github.io/compounding-engineering/paths/) shows how such choices can connect across several investments.
 
 ## Understand the work and check behavior
 
@@ -37,10 +39,12 @@ If the same difficulty keeps returning, [use AI to help investigate why](./guide
 ## Choose what deserves the effort
 
 15. **[Friction to hypothesis](./patterns/friction-to-hypothesis.md)** — Test competing explanations for recurring friction before choosing a repair.
-16. **[Shorten the learning loop](./patterns/shorten-the-learning-loop.md)** — Reduce the delay around a consequential question while keeping the evidence trustworthy.
-17. **[Competing prototypes](./patterns/competing-prototypes.md)** — Compare a few small implementations against the same question before committing.
-18. **[Subtraction investigation](./patterns/subtraction-investigation.md)** — Trace obligations and usage, rehearse removal, and name the evidence needed to delete.
-19. **[Investment retrospective](./patterns/investment-retrospective.md)** — Follow an investment into later work, including the time spent maintaining and teaching it.
+16. **[Investigate the recurring intervention](./patterns/recurring-intervention.md)** — Decide whether a recurring stop needs better evidence, a different design or a human decision.
+17. **[Shorten the learning loop](./patterns/shorten-the-learning-loop.md)** — Reduce the delay around a consequential question while keeping the evidence trustworthy.
+18. **[Competing prototypes](./patterns/competing-prototypes.md)** — Compare a few small implementations against the same question before committing.
+19. **[Subtraction investigation](./patterns/subtraction-investigation.md)** — Trace obligations and usage, rehearse removal, and name the evidence needed to delete.
+20. **[Retire the workaround](./patterns/retire-the-workaround.md)** — Check which duties remain before retiring a booking, approval or coordination step.
+21. **[Investment retrospective](./patterns/investment-retrospective.md)** — Follow an investment into later work, including the time spent maintaining and teaching it.
 
 ## Apply a skill
 

@@ -120,6 +120,14 @@
     "keywords": "learning ai hypothesis experiment evidence review friction investigation"
   },
   {
+    "slug": "recurring-intervention",
+    "title": "Investigate the recurring intervention",
+    "group": "invest",
+    "problem": "The same kind of change always needs a specialist to step in.",
+    "summary": "Decide whether a recurring stop needs better evidence, a different design or a human decision.",
+    "keywords": "autonomy exceptions migration review intervention workflow eliminate factory"
+  },
+  {
     "slug": "shorten-the-learning-loop",
     "title": "Shorten the learning loop",
     "group": "invest",
@@ -142,6 +150,14 @@
     "problem": "We suspect this code can go, but cannot prove it.",
     "summary": "Trace obligations and usage, rehearse removal, and name the evidence needed to delete.",
     "keywords": "delete remove cleanup flags unused retirement deprecation"
+  },
+  {
+    "slug": "retire-the-workaround",
+    "title": "Retire the workaround",
+    "group": "invest",
+    "problem": "We removed the constraint but kept the procedure built around it.",
+    "summary": "Check which duties remain before retiring a booking, approval or coordination step.",
+    "keywords": "constraint process elimination coordination meeting workflow workaround theory constraints"
   },
   {
     "slug": "investment-retrospective",
